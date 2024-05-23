@@ -4,6 +4,7 @@
 ### pip 패키지 설치
 ```cmd
 pip install google-cloud-speech
+pip install google-cloud-storage
 pip install gtts
 pip install pydub
 ```
