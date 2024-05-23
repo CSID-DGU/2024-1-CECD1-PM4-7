@@ -161,3 +161,8 @@ cython_debug/
 
 # key
 key/*.json
+
+# test audio
+public/*.mp3
+public/*.wav
+public/*.m4a
