@@ -18,4 +18,7 @@ ffmpeg -version
 ``` -->
 
 ### 키 배치
-key 폴더 하위에 배치하면 됨
+key 폴더 하위에 .json파일 배치
+
+### STT
+src/speech/main.py 실행
