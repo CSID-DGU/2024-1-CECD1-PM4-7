@@ -166,3 +166,5 @@ key/*.json
 public/*.mp3
 public/*.wav
 public/*.m4a
+public/*.csv
+public/*.zip
