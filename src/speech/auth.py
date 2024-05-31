@@ -8,6 +8,6 @@ def googleSTTAuth():
     key_path = os.path.abspath(key_path)
     # 서비스 계정 키 파일의 경로를 환경 변수로 설정
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
-
+    
 def googleTTSAuth():
     pass
