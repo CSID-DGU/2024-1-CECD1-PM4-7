@@ -31,11 +31,13 @@ def complete_xlsx_to_jsonl(filepath: str):
 def stt_xlsx_to_jsonl(filepath: str):
     # 프롬프트
     promptPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'public', 'prompt.json')
-    df_prompt = pd.read_json(promptPath)
-    prompt = df_prompt["stt_correction"].iloc[0]
+    promptPath = os.path.abspath(promptPath)
+    with open(promptPath, 'r', encoding='utf-8') as f:
+        prompt_data = json.load(f)
+    prompt = prompt_data["stt_correction"]
 
     # user input
-    df_user_input = pd.read_excel(filepath, usecols=[0])
+    df_user_input = pd.read_csv(filepath, usecols=[0])
     user_input = df_user_input.iloc[:, 0]
 
     # Todo: system input
@@ -59,3 +61,7 @@ def stt_xlsx_to_jsonl(filepath: str):
             f.write(item + '\n')
 
     return output_file_path
+
+
+if __name__ == '__main__':
+    stt_xlsx_to_jsonl("건강1.csv")

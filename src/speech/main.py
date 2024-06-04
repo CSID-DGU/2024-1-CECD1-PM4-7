@@ -15,5 +15,5 @@ auth.googleSTTAuth()
 '''
 STT.STT_pipeline(
     askFolder=True,
-    sliceWord=True
+    sliceWord=False
 )
