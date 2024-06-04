@@ -77,7 +77,7 @@ def open_folder_dialog():
 
 def STT_pipeline(askFolder=True, sliceWord=True):
     convert_result = []
-    if(askFolder):
+    if askFolder:
         path = open_folder_dialog()
     else:
         path = open_file_dialog()
