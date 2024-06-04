@@ -1,5 +1,5 @@
 # STT main
-import auth
+from src import auth
 import STT
 
 # Auth

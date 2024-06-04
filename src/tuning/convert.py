@@ -40,7 +40,7 @@ def stt_xlsx_to_jsonl(filepath: str):
     df_user_input = pd.read_csv(filepath, usecols=[0])
     user_input = df_user_input.iloc[:, 0]
 
-    # Todo: system input
+    # Todo: Assistant content
 
     # JSONL 데이터 생성
     json_list = []
