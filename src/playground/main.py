@@ -4,8 +4,17 @@ What to do
 2.
 """
 import sys
+import os
 from openai import OpenAI
-sys.path.append('..')
+# directory for pyinstaller
+if getattr(sys, 'frozen', False):
+    program_directory = os.path.dirname(os.path.abspath(sys.executable))
+else:
+    program_directory = os.path.dirname(os.path.abspath(__file__))
+
+authPath = os.path.abspath(os.path.join(program_directory, '..'))
+sys.path.append(authPath)
+
 import auth
 from saveFile import makeAssistFile
 from client import send_request

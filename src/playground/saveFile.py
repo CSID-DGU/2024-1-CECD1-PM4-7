@@ -2,8 +2,12 @@
 import pandas as pd
 import os
 import sys
-folder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'public'))
-temp = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'tuning'))
+if getattr(sys, 'frozen', False):
+    program_directory = os.path.dirname(os.path.abspath(sys.executable))
+else:
+    program_directory = os.path.dirname(os.path.abspath(__file__))
+folder_path = os.path.abspath(os.path.join(program_directory, '..', '..', 'public'))
+temp = os.path.abspath(os.path.join(program_directory, '..', '..', 'tuning'))
 sys.path.append(temp)
 from tuning.convert import complete_xlsx_to_jsonl
 
