@@ -1,6 +1,18 @@
 # STT main
-from src import auth
+import os
+import sys
+
+# directory for pyinstaller
+if getattr(sys, 'frozen', False):
+    program_directory = os.path.dirname(os.path.abspath(sys.executable))
+else:
+    program_directory = os.path.dirname(os.path.abspath(__file__))
+
+authPath = os.path.abspath(os.path.join(program_directory, '..'))
+sys.path.append(authPath)
 import STT
+
+import auth
 
 # Auth
 auth.googleSTTAuth()

@@ -164,8 +164,6 @@ key/*
 !key/*.md
 
 # test audio
-public/*.mp3
-public/*.wav
-public/*.m4a
-public/*.csv
-public/*.zip
+public/*
+!public/*.md
+!public/*.json

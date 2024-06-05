@@ -1,8 +1,21 @@
 # jsonl 변환 파일
 import json
-import pandas as pd
 import os
-from src.auth import getPrompt
+import sys
+
+import pandas as pd
+
+# directory for pyinstaller
+if getattr(sys, 'frozen', False):
+    program_directory = os.path.dirname(os.path.abspath(sys.executable))
+else:
+    program_directory = os.path.dirname(os.path.abspath(__file__))
+
+authPath = os.path.abspath(os.path.join(program_directory, '..'))
+sys.path.append(authPath)
+
+from auth import getPrompt
+
 
 # 이미 완성된 xlsx인 경우 사용
 def complete_xlsx_to_jsonl(filepath: str):
@@ -66,6 +79,7 @@ def stt_xlsx_to_jsonl(sttResult: list, excelPath: str):
         for item in json_list:
             f.write(item + '\n')
 
+    print("STT 학습 데이터 생성 완료.")
     return output_file_path
 
 
