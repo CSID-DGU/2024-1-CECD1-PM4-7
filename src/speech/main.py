@@ -1,5 +1,5 @@
 # STT main
-import auth
+from src import auth
 import STT
 
 # Auth
@@ -15,5 +15,5 @@ auth.googleSTTAuth()
 '''
 STT.STT_pipeline(
     askFolder=True,
-    sliceWord=True
+    sliceWord=False
 )
