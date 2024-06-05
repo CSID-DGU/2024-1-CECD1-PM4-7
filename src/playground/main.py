@@ -19,7 +19,7 @@ import auth
 from saveFile import makeAssistFile
 from client import send_request
 
-PROMPT = auth.getPlaygroundPrompt()
+PROMPT = auth.getPrompt("playground")
 KEY = auth.openAIAuth()
 client = OpenAI(api_key=KEY)
 
