@@ -12,10 +12,10 @@ authPath = os.path.abspath(os.path.join(program_directory, '..'))
 sys.path.append(authPath)
 import STT
 
-import auth
+import auth_
 
 # Auth
-auth.googleSTTAuth()
+auth_.googleSTTAuth()
 
 # 변환
 '''

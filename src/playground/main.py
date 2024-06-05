@@ -15,12 +15,12 @@ else:
 authPath = os.path.abspath(os.path.join(program_directory, '..'))
 sys.path.append(authPath)
 
-import auth
+import auth_
 from saveFile import makeAssistFile
 from client import send_request
 
-PROMPT = auth.getPrompt("playground")
-KEY = auth.openAIAuth()
+PROMPT = auth_.getPrompt("playground")
+KEY = auth_.openAIAuth()
 client = OpenAI(api_key=KEY)
 
 # 대화 기록

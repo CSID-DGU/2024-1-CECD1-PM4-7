@@ -14,7 +14,7 @@ else:
 authPath = os.path.abspath(os.path.join(program_directory, '..'))
 sys.path.append(authPath)
 
-from auth import getPrompt
+from auth_ import getPrompt
 
 
 # 이미 완성된 xlsx인 경우 사용
