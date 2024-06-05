@@ -1,8 +1,20 @@
 import os
+import sys
+
 import pandas as pd
 from pydub import AudioSegment
 
-from src.tuning.convert import stt_xlsx_to_jsonl
+# directory for pyinstaller
+if getattr(sys, 'frozen', False):
+    program_directory = os.path.dirname(os.path.abspath(sys.executable))
+else:
+    program_directory = os.path.dirname(os.path.abspath(__file__))
+
+authPath = os.path.abspath(os.path.join(program_directory, '..'))
+sys.path.append(authPath)
+
+from tuning.convert import stt_xlsx_to_jsonl
+
 
 # 폴더 내 모든 파일을 탐색하여 .wav파일로 변환
 # 변환된 파일의 샘플레이트는 16000hz로 고정함
