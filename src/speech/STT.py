@@ -75,7 +75,7 @@ def open_folder_dialog():
     return folder_path
 
 
-def STT_pipeline(askFolder=True, sliceWord=True):
+def STT_pipeline(askFolder=True, sliceWord=True, makeTrainData=False):
     convert_result = []
     if askFolder:
         path = open_folder_dialog()
@@ -84,6 +84,8 @@ def STT_pipeline(askFolder=True, sliceWord=True):
     
     # wav로 변환
     fileList = convert.convert_audio_files(path, askFolder)
+    if len(fileList) == 0:
+        fileList = [path]
 
     # STT
     for file in fileList:
@@ -93,4 +95,9 @@ def STT_pipeline(askFolder=True, sliceWord=True):
         convert_result.append(converted)
     
     # 결과
-    convert.convert_text_data(fileList, convert_result, sliceWord)
+    if makeTrainData:
+        print("Assistant content가 포함된 파일을 선택해주세요.")
+        filePath = open_file_dialog()
+        convert.convert_text_data(fileList, convert_result, sliceWord, filePath)
+    else:
+        convert.convert_text_data(fileList, convert_result, sliceWord)

@@ -1,8 +1,8 @@
 import os
-
 import pandas as pd
 from pydub import AudioSegment
 
+from src.tuning.convert import stt_xlsx_to_jsonl
 
 # 폴더 내 모든 파일을 탐색하여 .wav파일로 변환
 # 변환된 파일의 샘플레이트는 16000hz로 고정함
@@ -39,8 +39,9 @@ def convert_audio_files(path, isFolder) -> list:
     return converted_files
 
 
-# 변환된 텍스트파일을 csv파일로 출력
-def convert_text_data(fileList: list, data: list, sliceWord: bool):
+# 변환된 텍스트파일 변환
+
+def convert_text_data(fileList: list, data: list, sliceWord: bool, excelPath=None):
     assert len(fileList) == len(data)
 
     for i, filepath in enumerate(fileList):
@@ -54,11 +55,15 @@ def convert_text_data(fileList: list, data: list, sliceWord: bool):
         # "" 원소 제거
         sttResult = [ele for ele in sttResult if ele != '']
 
-        root, _ = filepath.rsplit('.', 1)
-        new_filepath = f"{root}.csv"
+        if excelPath is None:
+            root, _ = filepath.rsplit('.', 1)
+            new_filepath = f"{root}.csv"
+            df = pd.DataFrame(sttResult, columns=['STT'])
+            df.to_csv(new_filepath, index=False)
+        else:  # STT 학습용 데이터 생성
+            stt_xlsx_to_jsonl(sttResult, excelPath)
 
-        df = pd.DataFrame(sttResult, columns=['STT'])
-        df.to_csv(new_filepath, index=False)
+
 
 # debug
 if __name__ == '__main__':

@@ -15,11 +15,11 @@ def openAIAuth():
     return key_data["STT"]
 
 # prompt
-def getPlaygroundPrompt():
+def getPrompt(name: str):
     promptPath = os.path.abspath(os.path.join(current_dir, '..', '..', 'public', 'prompt.json'))
     with open(promptPath, 'r', encoding='utf-8') as f:
         prompt_data = json.load(f)
-    prompt = prompt_data["playground"]
+    prompt = prompt_data[name]
     return prompt
 
 # google Auth
