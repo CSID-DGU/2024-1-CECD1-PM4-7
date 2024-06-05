@@ -15,6 +15,9 @@ pip install pydub
 ```cmd
 pip install OpenAI
 ```
+
+### prompt 수정
+public/prompt.json에서 원하는 프롬프트 수정
 ### playground 실행
 src/playground/main.py
 
