@@ -65,13 +65,13 @@ def convert_text_data(fileList: list, data: list, sliceWord: bool, excelPath=Non
             sttResult = sliced
 
         # "" 원소 제거
-        sttResult = [ele for ele in sttResult if ele != '']
+        sttResult = [ele.strip() for ele in sttResult if ele.strip() != '']
 
         if excelPath is None:
             root, _ = filepath.rsplit('.', 1)
             new_filepath = f"{root}.csv"
             df = pd.DataFrame(sttResult, columns=['STT'])
-            df.to_csv(new_filepath, index=False)
+            df.to_csv(new_filepath, index=False, encoding='utf-8')
         else:  # STT 학습용 데이터 생성
             stt_xlsx_to_jsonl(sttResult, excelPath)
 
