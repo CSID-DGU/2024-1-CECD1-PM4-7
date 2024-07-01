@@ -6,7 +6,7 @@ authPath = os.path.abspath(os.path.join(program_directory, '..'))
 sys.path.append(authPath)
 import STT
 import convert
-import auth_
+from tuning import auth_
 import pprint
 import pandas as pd
 from tuning.convert import complete_xlsx_to_jsonl

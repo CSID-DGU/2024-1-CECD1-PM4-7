@@ -14,8 +14,7 @@ else:
 authPath = os.path.abspath(os.path.join(program_directory, '..'))
 sys.path.append(authPath)
 
-from auth_ import getPrompt
-
+from common import auth_
 
 # 이미 완성된 xlsx인 경우 사용
 def complete_xlsx_to_jsonl(filepath: str):
@@ -52,7 +51,7 @@ def stt_xlsx_to_jsonl(sttResult: list, excelPath: str):
         print("데이터 확인이 필요합니다.")
 
     # 프롬프트
-    prompt = getPrompt("stt_correction")
+    prompt = auth_.getPrompt("stt_correction")
 
     # JSONL 데이터 생성
     json_list = []

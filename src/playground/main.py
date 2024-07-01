@@ -15,7 +15,7 @@ else:
 authPath = os.path.abspath(os.path.join(program_directory, '..'))
 sys.path.append(authPath)
 
-import auth_
+from tuning import auth_
 from saveFile import makeAssistFile
 from client import send_request
 

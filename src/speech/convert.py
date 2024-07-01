@@ -76,7 +76,6 @@ def convert_text_data(fileList: list, data: list, sliceWord: bool, excelPath=Non
             stt_xlsx_to_jsonl(sttResult, excelPath)
 
 
-
 # debug
 if __name__ == '__main__':
     convert_path = os.path.abspath(os.path.join(os.getcwd(), 'public'))
