@@ -38,10 +38,14 @@ def transcribe_audio(file_path):
 # 1분 이상의 STT 처리
 def transcribe_long_audio(file_path):
     client = speech.SpeechClient()
-
+    print("1분 이상의 파일이므로 온라인으로 처리합니다...")
     bucket_name = 'stt_test_by_pm4'
     destination_blob_name = file_path.name
-    gcs_uri = upload_to_gcs(bucket_name, file_path, destination_blob_name)
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(destination_blob_name)
+    blob.upload_from_filename(file_path)
+    gcs_uri = f"gs://{bucket_name}/{destination_blob_name}"
 
     audio = speech.RecognitionAudio(uri=gcs_uri)
     config = speech.RecognitionConfig(
@@ -56,20 +60,11 @@ def transcribe_long_audio(file_path):
     return transcripts
 
 
-def upload_to_gcs(bucket_name, source_file_path, destination_blob_name):
-    storage_client = storage.Client()
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(destination_blob_name)
-    blob.upload_from_filename(source_file_path)
-    return f"gs://{bucket_name}/{destination_blob_name}"
-
-
 def open_file_dialog():
     root = tk.Tk()
     root.withdraw()
     file_path = filedialog.askopenfilename()
     return Path(file_path)
-
 
 def open_folder_dialog():
     root = tk.Tk()
@@ -78,17 +73,15 @@ def open_folder_dialog():
     return Path(folder_path)
 
 
-def STT_pipeline(askFolder=True, sliceWord=True, makeTrainData=False):
+def STT_pipeline(askFolder=None, makeTrainData=None):
     convert_result = []
+    if askFolder is None:
+        askFolder = input("폴더를 선택할까요?(Y/N): ").strip().lower() == 'y'
     if askFolder:
         path = open_folder_dialog()
     else:
         path = open_file_dialog()
-
-    # wav로 변환
-    fileList = convert_audio_files(path, askFolder)
-    if len(fileList) == 0:
-        fileList = [path]
+    fileList = convert_audio_files(path, askFolder)  # wav로 변환
 
     # STT
     for file in fileList:
@@ -98,9 +91,11 @@ def STT_pipeline(askFolder=True, sliceWord=True, makeTrainData=False):
         convert_result.append(converted)
 
     # 결과
+    if makeTrainData is None:
+        makeTrainData = input("학습 데이터를 만들까요?(Y/N): ").strip().lower() == 'y'
     if makeTrainData:
-        print("Assistant content가 포함된 파일을 선택해주세요.")
-        filePath = open_file_dialog()
-        convert_text_data(fileList, convert_result, sliceWord, filePath)
+        excelPath = open_file_dialog()
+        convert_text_data(fileList, convert_result, excelPath)
     else:
-        convert_text_data(fileList, convert_result, sliceWord)
+        convert_text_data(fileList, convert_result)
+    print("완료.")

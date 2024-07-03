@@ -18,7 +18,7 @@ setup(
         'matplotlib',
         'torch',
         'transformers',
-        'setuptools'
+        'ffmpeg-python'
     ],
     data_files=[
         ('key', key_files),
