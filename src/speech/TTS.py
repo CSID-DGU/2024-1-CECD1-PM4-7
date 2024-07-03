@@ -1,4 +1,4 @@
-# !pip install gtts
+# Todo: GTTS -> select voiceline
 from gtts import gTTS
 
 # 변환할 텍스트

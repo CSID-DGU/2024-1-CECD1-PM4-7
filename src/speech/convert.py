@@ -1,17 +1,7 @@
 import os
-import sys
-
+from pathlib import Path
 import pandas as pd
 from pydub import AudioSegment
-
-# directory for pyinstaller
-if getattr(sys, 'frozen', False):
-    program_directory = os.path.dirname(os.path.abspath(sys.executable))
-else:
-    program_directory = os.path.dirname(os.path.abspath(__file__))
-
-authPath = os.path.abspath(os.path.join(program_directory, '..'))
-sys.path.append(authPath)
 
 from tuning.convert import stt_xlsx_to_jsonl
 
@@ -34,7 +24,7 @@ def convert_audio_files(path, isFolder) -> list:
 
                 audio.export(new_file_path, format='wav')
                 print(f"변환 완료: {file_path} -> {new_file_path}")
-                converted_files.append(new_file_path)
+                converted_files.append(Path(new_file_path))
     else:
         file_ext = os.path.splitext(path)[1].lower()
         if file_ext in ['.mp3', '.m4a']:
@@ -46,13 +36,12 @@ def convert_audio_files(path, isFolder) -> list:
 
             audio.export(new_file_path, format='wav')
             print(f"변환 완료: {path} -> {new_file_path}")
-            converted_files.append(new_file_path)
+            converted_files.append(Path(new_file_path))
 
     return converted_files
 
 
 # 변환된 텍스트파일 변환
-
 def convert_text_data(fileList: list, data: list, sliceWord: bool, excelPath=None):
     assert len(fileList) == len(data)
 
@@ -68,7 +57,7 @@ def convert_text_data(fileList: list, data: list, sliceWord: bool, excelPath=Non
         sttResult = [ele.strip() for ele in sttResult if ele.strip() != '']
 
         if excelPath is None:
-            root, _ = filepath.rsplit('.', 1)
+            root, _ = str(filepath).rsplit('.', 1)
             new_filepath = f"{root}.csv"
             df = pd.DataFrame(sttResult, columns=['STT'])
             df.to_csv(new_filepath, index=False, encoding='utf-8')

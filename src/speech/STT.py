@@ -1,20 +1,19 @@
-import io
-import os
 import pprint
 import tkinter as tk
 import wave
 from tkinter import filedialog
+from pathlib import Path
 
-import convert
-from google.cloud import speech_v1p1beta1 as speech
-from google.cloud import storage
+from convert import convert_audio_files, convert_text_data
+import google.cloud.speech_v1p1beta1 as speech
+import google.cloud.storage as storage
 
 
 # STT
 def transcribe_audio(file_path):
     client = speech.SpeechClient()
 
-    with io.open(file_path, "rb") as audio_file:
+    with file_path.open("rb") as audio_file:
         content = audio_file.read()
 
     audio = speech.RecognitionAudio(content=content)
@@ -24,7 +23,7 @@ def transcribe_audio(file_path):
         language_code="ko-KR",
     )
 
-    with wave.open(file_path, 'rb') as wav_file:
+    with wave.open(str(file_path), 'rb') as wav_file:
         duration = wav_file.getnframes() / wav_file.getframerate()
 
     if duration > 60:
@@ -35,12 +34,13 @@ def transcribe_audio(file_path):
         transcripts = [result.alternatives[0].transcript for result in response.results]
         return transcripts
 
+
 # 1분 이상의 STT 처리
 def transcribe_long_audio(file_path):
     client = speech.SpeechClient()
-    
+
     bucket_name = 'stt_test_by_pm4'
-    destination_blob_name = os.path.basename(file_path)
+    destination_blob_name = file_path.name
     gcs_uri = upload_to_gcs(bucket_name, file_path, destination_blob_name)
 
     audio = speech.RecognitionAudio(uri=gcs_uri)
@@ -51,28 +51,31 @@ def transcribe_long_audio(file_path):
     )
     operation = client.long_running_recognize(config=config, audio=audio)
     response = operation.result(timeout=180)
-    
+
     transcripts = [result.alternatives[0].transcript for result in response.results]
     return transcripts
 
-def upload_to_gcs(bucket_name, source_file_name, destination_blob_name):
+
+def upload_to_gcs(bucket_name, source_file_path, destination_blob_name):
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(destination_blob_name)
-    blob.upload_from_filename(source_file_name)
+    blob.upload_from_filename(source_file_path)
     return f"gs://{bucket_name}/{destination_blob_name}"
+
 
 def open_file_dialog():
     root = tk.Tk()
     root.withdraw()
     file_path = filedialog.askopenfilename()
-    return file_path
+    return Path(file_path)
+
 
 def open_folder_dialog():
     root = tk.Tk()
     root.withdraw()
     folder_path = filedialog.askdirectory()
-    return folder_path
+    return Path(folder_path)
 
 
 def STT_pipeline(askFolder=True, sliceWord=True, makeTrainData=False):
@@ -81,23 +84,23 @@ def STT_pipeline(askFolder=True, sliceWord=True, makeTrainData=False):
         path = open_folder_dialog()
     else:
         path = open_file_dialog()
-    
+
     # wav로 변환
-    fileList = convert.convert_audio_files(path, askFolder)
+    fileList = convert_audio_files(path, askFolder)
     if len(fileList) == 0:
         fileList = [path]
 
     # STT
     for file in fileList:
         converted = transcribe_audio(file)
-        print(f"{file}변환 결과: ")
+        print(f"{file} 변환 결과: ")
         pprint.pprint(converted)
         convert_result.append(converted)
-    
+
     # 결과
     if makeTrainData:
         print("Assistant content가 포함된 파일을 선택해주세요.")
         filePath = open_file_dialog()
-        convert.convert_text_data(fileList, convert_result, sliceWord, filePath)
+        convert_text_data(fileList, convert_result, sliceWord, filePath)
     else:
-        convert.convert_text_data(fileList, convert_result, sliceWord)
+        convert_text_data(fileList, convert_result, sliceWord)

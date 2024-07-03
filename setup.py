@@ -14,7 +14,7 @@ setup(
       'google-cloud-speech',
       'google-cloud-storage',
       'pydub',
-      'OpenAI'
+      'openai'
     ],
     data_files=[
         ('key', key_files),
