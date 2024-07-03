@@ -10,11 +10,15 @@ setup(
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
     install_requires=[
-      'pandas',
-      'google-cloud-speech',
-      'google-cloud-storage',
-      'pydub',
-      'openai'
+        'pandas',
+        'google-cloud-speech',
+        'google-cloud-storage',
+        'pydub',
+        'openai',
+        'matplotlib',
+        'torch',
+        'transformers',
+        'setuptools'
     ],
     data_files=[
         ('key', key_files),

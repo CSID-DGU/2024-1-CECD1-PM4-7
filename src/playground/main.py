@@ -3,19 +3,9 @@ What to do
 1. Auth
 2.
 """
-import sys
-import os
+from pathlib import Path
 from openai import OpenAI
-# directory for pyinstaller
-if getattr(sys, 'frozen', False):
-    program_directory = os.path.dirname(os.path.abspath(sys.executable))
-else:
-    program_directory = os.path.dirname(os.path.abspath(__file__))
-
-authPath = os.path.abspath(os.path.join(program_directory, '..'))
-sys.path.append(authPath)
-
-from tuning import auth_
+from common import auth_
 from saveFile import makeAssistFile
 from client import send_request
 

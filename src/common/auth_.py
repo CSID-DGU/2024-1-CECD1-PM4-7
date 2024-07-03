@@ -9,7 +9,8 @@ key_folder = project_dir / 'key'
 
 # openAI Auth
 def openAIAuth():
-    with open('key/STT.json', 'r', encoding='utf-8') as f:
+    key_path = str(key_folder / "STT.json")
+    with open(key_path, 'r', encoding='utf-8') as f:
         key_data = json.load(f)
 
     return key_data["STT"]
