@@ -15,14 +15,6 @@ def openAIAuth():
 
     return key_data["STT"]
 
-# prompt
-def getPrompt(name: str):
-    promptPath = str(key_folder / 'prompt.json')
-    with open(promptPath, 'r', encoding='utf-8') as f:
-        prompt_data = json.load(f)
-    prompt = prompt_data[name]
-    return prompt
-
 # google Auth
 def googleSTTAuth():
     key_path = str(key_folder / "vocal-entity-420406-b9648ba69fca.json")

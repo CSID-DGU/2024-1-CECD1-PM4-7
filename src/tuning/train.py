@@ -1,73 +1,63 @@
-import os
-
-import auth
-import evaluate
-import pandas as pd
-from openai import OpenAI
-
-
-def add_data(df, original_text, stt_output, corrected_text, ser_ori_stt, ser_ori_cor, cosine_ori_stt, cosine_ori_cor):
-    new_data = {
-        'original_text': [original_text],
-        'stt_output': [stt_output],
-        'corrected_text': [corrected_text],
-        'SER(ori, STT)': [ser_ori_stt],
-        'SER(ori, Cor)': [ser_ori_cor],
-        'Cosine(Ori, STT)': [cosine_ori_stt],
-        'Cosine(ori, Cor)': [cosine_ori_cor]
-    }
-    new_df = pd.DataFrame(new_data)
-    df = pd.concat([df, new_df], ignore_index=True)
-    return df
+# 학습 진행
+import time
+from common import auth_
+from evaluate import evaluation
+import openai
+from pathlib import Path
+from common.info import open_dialog, updateModelName
 
 
-if __name__ == '__main__':
-    key = auth.openAIAuth()
-    
-    df = pd.DataFrame(columns=[
-        'original_text', 'stt_output', 'corrected_text',
-        'SER(ori, STT)', 'SER(ori, Cor)',
-        'Cosine(Ori, STT)', 'Cosine(ori, Cor)'
-    ])
+# 작업 상태 확인
+def check_fine_tune_status(fine_tune_id):
+    response = openai.FineTune.retrieve(id=fine_tune_id)
+    status = response['status']
+    return status
 
-    file_path = "This is Dummy Path"
+# 학습
+def train(model_name: str, filepath: Path, evaluate: bool) -> bool:
+    try:
+        openai.api_key = auth_.openAIAuth()
 
-    # 엑셀 파일을 읽어 데이터프레임으로 구성
-    df_data = pd.read_excel(file_path)
-
-    # 'user_content'와 'assistant_content' 컬럼의 데이터를 각각 리스트로 저장
-    questions = df_data['User content'].tolist()
-    origins = df_data['Assistant content'].tolist()
-
-    # 결과 출력
-    print("Questions:", questions)
-    print("Origin:", origins)
-
-    messages = [
-        [{"role": "user", "content": question}] for question in questions
-    ]
-
-    for message, origin, question in zip(messages, origins, questions):
-        response = client.chat.completions.create(
-        model="ft:gpt-3.5-turbo-1106:personal::9EdV2QBZ",
-        messages= message,
-        temperature=1,
-        max_tokens=50,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0,
-        stop=["\n\n"]
+        # 학습 데이터 준비
+        response = openai.File.create(
+            file=open(str(filepath), 'rb'),
+            purpose='fine-tune'
         )
-        original_text = origin
-        stt_output = question
-        corrected_text = response.choices[0].message.content
-        contents = [original_text, stt_output, corrected_text]
+        file_id = response['id']
+        print(f"File ID: {file_id} uploaded.")
 
-        ser_1_2, ser_1_3 = evaluate.calculate_ser(original_text, stt_output, corrected_text)
-        cos_1_2, cos_1_3 = evaluate.calculate_cos(original_text, stt_output, corrected_text)
+        # 학습 시작
+        response = openai.FineTune.create(
+            training_file=file_id,
+            model=model_name
+        )
+        fine_tune_id = response['id']
+        print(f"Fine-tune ID: {fine_tune_id} start.")
 
-        df = add_data(df, original_text, stt_output, corrected_text,
-                        ser_1_2, ser_1_3, cos_1_2.item(), cos_1_3.item())
+        # 진행 상황 모니터링
+        status = check_fine_tune_status(fine_tune_id)
+        while status not in ["succeeded", "failed"]:
+            print(f"Current status: {status}")
+            time.sleep(30)  # 30초 간격으로 상태 확인
+            status = check_fine_tune_status(fine_tune_id)
 
-df.to_excel('output.xlsx', index=False)
-print("Dataframe saved to 'output.xlsx'")
+        print(f"Final status: {status}")
+
+        if status == "succeeded":
+            print("학습 성공")
+            # 신규 모델 이름
+            fine_tuned_model = openai.FineTune.retrieve(id=fine_tune_id)['fine_tuned_model']
+            print(f"신규 모델: {fine_tuned_model}")
+            updateModelName('STT', fine_tuned_model)
+            # 검증
+            if evaluate:
+                print("검증 시작")
+                evaluation(fine_tuned_model)
+            else:
+                print("검증 없이 종료합니다..")
+            return True
+        else:
+            print("학습 실패")
+    except Exception as e:
+        print(f"오류 발생: {e}")
+        return False

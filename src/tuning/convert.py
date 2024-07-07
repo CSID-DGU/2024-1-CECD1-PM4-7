@@ -1,23 +1,13 @@
 # jsonl 변환 파일
 import json
-import os
-import sys
-
 import pandas as pd
 
-# directory for pyinstaller
-if getattr(sys, 'frozen', False):
-    program_directory = os.path.dirname(os.path.abspath(sys.executable))
-else:
-    program_directory = os.path.dirname(os.path.abspath(__file__))
-
-authPath = os.path.abspath(os.path.join(program_directory, '..'))
-sys.path.append(authPath)
-
+import common.info
 from common import auth_
+from pathlib import Path
 
-# 이미 완성된 xlsx인 경우 사용
-def complete_xlsx_to_jsonl(filepath: str):
+# 학습 데이터 형태를 갖춘 엑셀파일을 사용
+def completed_xlsx_to_jsonl(filepath: Path) -> Path:
     df_conv = pd.read_excel(filepath)
     json_list = []
 
@@ -31,17 +21,17 @@ def complete_xlsx_to_jsonl(filepath: str):
         }
         json_list.append(json.dumps(message, ensure_ascii=False))
 
-    output_file_path = os.path.splitext(filepath)[0] + '.jsonl'
+    output_file_path = filepath.with_suffix('.jsonl')
 
-    with open(output_file_path, 'w', encoding='utf-8-sig') as f:
+    with output_file_path.open('w', encoding='utf-8-sig') as f:
         for item in json_list:
             f.write(item + '\n')
 
     return output_file_path
 
 
-# STT 결과 파일인 경우 사용
-def stt_xlsx_to_jsonl(sttResult: list, excelPath: str):
+# STT 파이프라인을 통해 생성한 학습 데이터일 경우 사용
+def stt_result_to_jsonl(sttResult: list, excelPath: Path):
     # Assistant content
     df = pd.read_excel(excelPath)
     df2 = df[['User content']]
@@ -51,7 +41,7 @@ def stt_xlsx_to_jsonl(sttResult: list, excelPath: str):
         print("데이터 확인이 필요합니다.")
 
     # 프롬프트
-    prompt = auth_.getPrompt("stt_correction")
+    prompt = common.info.getPrompt("stt_train")
 
     # JSONL 데이터 생성
     json_list = []
@@ -73,8 +63,8 @@ def stt_xlsx_to_jsonl(sttResult: list, excelPath: str):
         json_list.append(json.dumps(message, ensure_ascii=False))
 
     # JSONL 파일 저장
-    output_file_path = os.path.splitext(excelPath)[0] + '_STT.jsonl'
-    with open(output_file_path, 'w', encoding='utf-8-sig') as f:
+    output_file_path = excelPath.with_suffix('_STT.jsonl')
+    with output_file_path.open('w', encoding='utf-8-sig') as f:
         for item in json_list:
             f.write(item + '\n')
 
@@ -82,5 +72,3 @@ def stt_xlsx_to_jsonl(sttResult: list, excelPath: str):
     return output_file_path
 
 
-if __name__ == '__main__':
-    stt_xlsx_to_jsonl("건강1.csv")

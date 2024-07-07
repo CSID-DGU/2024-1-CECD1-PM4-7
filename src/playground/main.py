@@ -5,11 +5,13 @@ What to do
 """
 from pathlib import Path
 from openai import OpenAI
+
+import common.info
 from common import auth_
 from saveFile import makeAssistFile
 from client import send_request
 
-PROMPT = auth_.getPrompt("playground")
+PROMPT = common.info.getPrompt("playground")
 KEY = auth_.openAIAuth()
 client = OpenAI(api_key=KEY)
 

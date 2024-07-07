@@ -1,13 +1,9 @@
 import pprint
-import tkinter as tk
 import wave
-from tkinter import filedialog
-from pathlib import Path
-
 from convert import convert_audio_files, convert_text_data
 import google.cloud.speech_v1p1beta1 as speech
 import google.cloud.storage as storage
-
+from common.info import open_dialog
 
 # STT
 def transcribe_audio(file_path):
@@ -60,27 +56,14 @@ def transcribe_long_audio(file_path):
     return transcripts
 
 
-def open_file_dialog():
-    root = tk.Tk()
-    root.withdraw()
-    file_path = filedialog.askopenfilename()
-    return Path(file_path)
-
-def open_folder_dialog():
-    root = tk.Tk()
-    root.withdraw()
-    folder_path = filedialog.askdirectory()
-    return Path(folder_path)
-
-
 def STT_pipeline(askFolder=None, makeTrainData=None):
     convert_result = []
     if askFolder is None:
         askFolder = input("폴더를 선택할까요?(Y/N): ").strip().lower() == 'y'
     if askFolder:
-        path = open_folder_dialog()
+        path = open_dialog(True)
     else:
-        path = open_file_dialog()
+        path = open_dialog(False, filetypes=[("Audio files", "*.m4a *.mp3 *.wav")])
     fileList = convert_audio_files(path, askFolder)  # wav로 변환
 
     # STT
@@ -94,7 +77,7 @@ def STT_pipeline(askFolder=None, makeTrainData=None):
     if makeTrainData is None:
         makeTrainData = input("학습 데이터를 만들까요?(Y/N): ").strip().lower() == 'y'
     if makeTrainData:
-        excelPath = open_file_dialog()
+        excelPath = open_dialog(False)
         convert_text_data(fileList, convert_result, excelPath)
     else:
         convert_text_data(fileList, convert_result)
