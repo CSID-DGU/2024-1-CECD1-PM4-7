@@ -160,7 +160,7 @@ cython_debug/
 .idea/
 
 # key
-key/STT.json
+key/key.json
 key/vocal-entity-420406-b9648ba69fca.json
 !key/*.md
 

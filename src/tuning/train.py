@@ -1,6 +1,6 @@
 # 학습 진행
 import time
-from common import auth_
+from common.auth_ import getKey
 from evaluate import evaluation
 import openai
 from pathlib import Path
@@ -16,7 +16,7 @@ def check_fine_tune_status(fine_tune_id):
 # 학습
 def train(model_name: str, filepath: Path, evaluate: bool) -> bool:
     try:
-        openai.api_key = auth_.openAIAuth()
+        openai.api_key = getKey('STT')
 
         # 학습 데이터 준비
         response = openai.File.create(
