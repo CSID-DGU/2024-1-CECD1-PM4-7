@@ -77,8 +77,9 @@ def STT_pipeline(askFolder=None, makeTrainData=None):
     if makeTrainData is None:
         makeTrainData = input("학습 데이터를 만들까요?(Y/N): ").strip().lower() == 'y'
     if makeTrainData:
+        jsonl = input("jsonl데이터로 만들까요?(Y/N): ").strip().lower() == 'y'
         excelPath = open_dialog(False)
-        convert_text_data(fileList, convert_result, excelPath)
+        convert_text_data(fileList, convert_result, jsonl, excelPath)
     else:
-        convert_text_data(fileList, convert_result)
+        convert_text_data(fileList, convert_result, True)
     print("완료.")

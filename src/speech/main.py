@@ -13,7 +13,9 @@ auth_.googleSTTAuth()
     makeTrainData = True: 변환 결과를 학습 데이터로도 생성
             = False: 학습 데이터를 생성하지 않음
 '''
+
+
 STT.STT_pipeline(
-    askFolder=None,
-    makeTrainData=None
+    askFolder=True,
+    makeTrainData=True
 )

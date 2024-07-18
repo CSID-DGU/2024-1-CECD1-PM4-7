@@ -1,3 +1,4 @@
+# 데이터 확장 기능에서 중복을 제거하는 모듈
 import pandas as pd
 from common.info import open_dialog
 import re

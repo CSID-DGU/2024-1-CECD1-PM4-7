@@ -31,7 +31,7 @@ def completed_xlsx_to_jsonl(filepath: Path) -> Path:
 
 
 # STT 파이프라인을 통해 생성한 학습 데이터일 경우 사용
-def stt_result_to_jsonl(sttResult: list, excelPath: Path):
+def convert_stt_result(sttResult: list, excelPath: Path, to_jsonl: bool):
     # Assistant content
     df = pd.read_excel(excelPath)
     df2 = df[['User content']]
@@ -43,32 +43,41 @@ def stt_result_to_jsonl(sttResult: list, excelPath: Path):
     # 프롬프트
     prompt = common.info.getPrompt("stt_train")
 
-    # JSONL 데이터 생성
-    json_list = []
-    for i in range(len(df2)):
-        if i == 0:
-            continue
-        ac = df2.iloc[i]["User content"]
-        try:
-            uc = sttResult[i-1]
-        except IndexError:
-            uc = ""
-        message = {
-            "messages": [
-                {"role": "system", "content": prompt},
-                {"role": "user", "content": uc},
-                {"role": "assistant", "content": ac}
-            ]
-        }
-        json_list.append(json.dumps(message, ensure_ascii=False))
+    if to_jsonl:
+        # JSONL 데이터 생성
+        json_list = []
+        for i in range(len(df2)):
+            if i == 0:
+                continue
+            ac = df2.iloc[i]["User content"]
+            try:
+                uc = sttResult[i-1]
+            except IndexError:
+                uc = ""
+            message = {
+                "messages": [
+                    {"role": "system", "content": prompt},
+                    {"role": "user", "content": uc},
+                    {"role": "assistant", "content": ac}
+                ]
+            }
+            json_list.append(json.dumps(message, ensure_ascii=False))
 
-    # JSONL 파일 저장
-    output_file_path = excelPath.with_suffix('_STT.jsonl')
-    with output_file_path.open('w', encoding='utf-8-sig') as f:
-        for item in json_list:
-            f.write(item + '\n')
+        # JSONL 파일 저장
+        output_file_path = excelPath.with_suffix('_STT.jsonl')
+        with output_file_path.open('w', encoding='utf-8-sig') as f:
+            for item in json_list:
+                f.write(item + '\n')
+
+    # xlsx
+    else:
+        df_stt = pd.DataFrame({
+            "User content": df2["User content"],
+            "STT Result": sttResult,
+        })
+
+        output_file_path = excelPath.with_suffix('_STT.xlsx')
+        df_stt.to_excel(output_file_path, index=False)
 
     print("STT 학습 데이터 생성 완료.")
     return output_file_path
-
-
