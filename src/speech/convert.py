@@ -40,7 +40,8 @@ def convert_text_data(fileList: list, data: list, to_jsonl: bool, excel=None):
 
         # "" 원소 제거
         sttResult = [ele.strip() for ele in sttResult if ele.strip() != '']
-        final_result.append(ele for ele in sttResult)
+        for ele in sttResult:
+            final_result.append(ele)
 
         if excel is None:
             new_filepath = filepath.with_suffix('.csv')
