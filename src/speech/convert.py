@@ -2,7 +2,7 @@ import ffmpeg
 from pathlib import Path
 import pandas as pd
 
-from tuning.convert import stt_xlsx_to_jsonl
+from tuning.convert import convert_stt_result
 
 # 폴더 내 모든 파일을 탐색하여 .wav파일로 변환
 # 변환된 파일의 샘플레이트는 16000hz로 고정함
@@ -33,19 +33,21 @@ def convert_file(filepath: Path) -> Path:
     return new_filepath
 
 # 변환된 텍스트파일 가공
-def convert_text_data(fileList: list, data: list, excel=None):
-    assert len(fileList) == len(data)
-
+def convert_text_data(fileList: list, data: list, to_jsonl: bool, excel=None):
+    final_result = []
     for i, filepath in enumerate(fileList):
         sttResult = data[i]
 
         # "" 원소 제거
         sttResult = [ele.strip() for ele in sttResult if ele.strip() != '']
+        for ele in sttResult:
+            final_result.append(ele)
 
         if excel is None:
             new_filepath = filepath.with_suffix('.csv')
             df = pd.DataFrame(sttResult, columns=['STT'])
             df.to_csv(new_filepath, index=False, encoding='utf-8')
-        else:  # STT 학습용 데이터 생성
-            stt_xlsx_to_jsonl(sttResult, excel)
+
+    if excel:  # STT 학습용 데이터 생성
+        convert_stt_result(final_result, excel, to_jsonl)
 

@@ -6,7 +6,7 @@ public_files = glob.glob('public/*')
 
 setup(
     name="CECD",
-    version="0.2",
+    version="0.3",
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
     install_requires=[
@@ -18,7 +18,8 @@ setup(
         'matplotlib',
         'torch',
         'transformers',
-        'ffmpeg-python'
+        'ffmpeg-python',
+        'konlpy'
     ],
     data_files=[
         ('key', key_files),

@@ -7,7 +7,7 @@ def send_request(client, conversation_history, user_input: str):
     })
 
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o-mini",
         messages=conversation_history,
         temperature=0.1,
         max_tokens=256,

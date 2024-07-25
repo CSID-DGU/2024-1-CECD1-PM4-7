@@ -4,6 +4,7 @@ from convert import convert_audio_files, convert_text_data
 import google.cloud.speech_v1p1beta1 as speech
 import google.cloud.storage as storage
 from common.info import open_dialog
+import re
 
 # STT
 def transcribe_audio(file_path):
@@ -55,6 +56,9 @@ def transcribe_long_audio(file_path):
     transcripts = [result.alternatives[0].transcript for result in response.results]
     return transcripts
 
+# 폴더 내 객체 정렬을 위한 함수
+def natural_sort_key(s):
+    return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', str(s))]
 
 def STT_pipeline(askFolder=None, makeTrainData=None):
     convert_result = []
@@ -65,6 +69,7 @@ def STT_pipeline(askFolder=None, makeTrainData=None):
     else:
         path = open_dialog(False, filetypes=[("Audio files", "*.m4a *.mp3 *.wav")])
     fileList = convert_audio_files(path, askFolder)  # wav로 변환
+    fileList = sorted(fileList, key=natural_sort_key)
 
     # STT
     for file in fileList:
@@ -77,8 +82,10 @@ def STT_pipeline(askFolder=None, makeTrainData=None):
     if makeTrainData is None:
         makeTrainData = input("학습 데이터를 만들까요?(Y/N): ").strip().lower() == 'y'
     if makeTrainData:
+        jsonl = input("jsonl데이터로 만들까요?(Y/N): ").strip().lower() == 'y'
         excelPath = open_dialog(False)
-        convert_text_data(fileList, convert_result, excelPath)
+        convert_text_data(fileList, convert_result, jsonl, excelPath)
     else:
-        convert_text_data(fileList, convert_result)
+        convert_text_data(fileList, convert_result, True)
+
     print("완료.")

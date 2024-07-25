@@ -2,7 +2,7 @@
 import pandas as pd
 import openai
 from pathlib import Path
-from common.auth_ import openAIAuth
+from common.auth_ import getKey
 from common.info import open_dialog
 from calculate import calculate_accuracy, draw_result
 
@@ -28,7 +28,7 @@ def evaluation(model_name: str):
     project_dir = Path(__file__).resolve().parent.parent.parent
     public_dir = project_dir / 'public'
     # 키
-    openai.api_key = openAIAuth()
+    openai.api_key = getKey('STT')
 
     # 검증 파일
     file_path: Path = open_dialog(False, "검증 파일 선택", [("Excel files", "*.xlsx")])

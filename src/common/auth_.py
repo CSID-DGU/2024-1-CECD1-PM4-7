@@ -1,21 +1,27 @@
 # API 키 임포트
 import os
 import json
+import sys
+import hashlib
+import hmac
+import base64
+import requests
+import time
 from pathlib import Path
 
 project_dir = Path(__file__).resolve().parent.parent.parent
 key_folder = project_dir / 'key'
 
 
-# openAI Auth
-def openAIAuth():
-    key_path = str(key_folder / "STT.json")
+# Auth - get Keys from key.json
+def getKey(title: str):
+    key_path = str(key_folder / "key.json")
     with open(key_path, 'r', encoding='utf-8') as f:
         key_data = json.load(f)
 
-    return key_data["STT"]
+    return key_data[title]
 
-# google Auth
+# Auth - google
 def googleSTTAuth():
     key_path = str(key_folder / "vocal-entity-420406-b9648ba69fca.json")
     # 서비스 계정 키 파일의 경로를 환경 변수로 설정
@@ -23,3 +29,41 @@ def googleSTTAuth():
     
 def googleTTSAuth():
     pass
+
+# Auth - CLOVA
+class CreateTaskExecutor:
+    def __init__(self, host, uri, method, iam_access_key, secret_key, request_id):
+        self._host = host
+        self._uri = uri
+        self._method = method
+        self._api_gw_time = str(int(time.time() * 1000))
+        self._iam_access_key = iam_access_key
+        self._secret_key = secret_key
+        self._request_id = request_id
+
+    def _make_signature(self):
+        secret_key = bytes(self._secret_key, 'UTF-8')
+        message = self._method + " " + self._uri + "\n" + self._api_gw_time + "\n" + self._iam_access_key
+        message = bytes(message, 'UTF-8')
+        signing_key = base64.b64encode(hmac.new(secret_key, message, digestmod=hashlib.sha256).digest())
+        return signing_key
+
+    def _send_request(self, create_request):
+
+        headers = {
+            'X-NCP-APIGW-TIMESTAMP': self._api_gw_time,
+            'X-NCP-IAM-ACCESS-KEY': self._iam_access_key,
+            'X-NCP-APIGW-SIGNATURE-V2': self._make_signature(),
+            'X-NCP-CLOVASTUDIO-REQUEST-ID': self._request_id
+        }
+        result = requests.post(self._host + self._uri, json=create_request, headers=headers).json()
+        return result
+
+    def execute(self, create_request):
+        res = self._send_request(create_request)
+        if 'status' in res and res['status']['code'] == '20000':
+            return res['result']
+        else:
+            return res
+
+

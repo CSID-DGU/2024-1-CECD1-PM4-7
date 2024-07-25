@@ -7,12 +7,12 @@ from pathlib import Path
 from openai import OpenAI
 
 import common.info
-from common import auth_
+from common.auth_ import getKey
 from saveFile import makeAssistFile
 from client import send_request
 
 PROMPT = common.info.getPrompt("playground")
-KEY = auth_.openAIAuth()
+KEY = getKey('STT')
 client = OpenAI(api_key=KEY)
 
 # 대화 기록
