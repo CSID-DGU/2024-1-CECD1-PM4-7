@@ -29,6 +29,27 @@ def completed_xlsx_to_jsonl(filepath: Path) -> Path:
 
     return output_file_path
 
+# 대화모델 jsonl파일 생성용
+def chat_xlsx_to_jsonl(filepath: Path) -> Path:
+    df_conv = pd.read_excel(filepath)
+    json_list = []
+    msg = [{"role": "system", "content": df_conv.loc[0]['System content']}]
+
+    for index, row in df_conv.iterrows():
+        msg.append({"role": "user", "content": row['User content']})
+        msg.append({"role": "assistant", "content": row['Assistant content']})
+
+    message = {"messages": msg}
+    json_list.append(json.dumps(message, ensure_ascii=False))
+
+    output_file_path = filepath.with_suffix('.jsonl')
+
+    with output_file_path.open('w', encoding='utf-8-sig') as f:
+        for item in json_list:
+            f.write(item + '\n')
+
+    return output_file_path
+
 
 # STT 파이프라인을 통해 생성한 학습 데이터일 경우 사용
 def convert_stt_result(sttResult: list, excelPath: Path, to_jsonl: bool):
