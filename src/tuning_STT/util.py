@@ -1,4 +1,4 @@
-# 오류 가능성을 검사
+# 문장 분리 및 결합
 import re
 from jamo import h2j, j2hcj
 
@@ -46,6 +46,10 @@ def rev_sentence(jamo_list):
         result.append(join_jamos(jamo_buffer))
 
     return ''.join(result)
+
+# 문자가 한글인지 확인
+def is_hangul(char):
+    return '가' <= char <= '힣'
 
 # debug
 if __name__ == '__main__':
