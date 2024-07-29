@@ -3,7 +3,7 @@ from common import auth_
 import STT
 
 # Auth
-auth_.googleSTTAuth()
+auth_.googleAuth()
 
 # 변환
 '''
