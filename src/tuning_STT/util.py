@@ -1,24 +1,54 @@
 # 오류 가능성을 검사
+import re
+from jamo import h2j, j2hcj
 
-# 1. 후음 'ㅎ'
-def check_h_presence(sent: str):
-    error_index_list = []
-    words = sent.split()
+# 문장을 문자단위로 분리함
+def sep_sentence(sentence: str) -> list:
+    result = []
+    for char in sentence:
+        if re.match('[가-힣]', char):
+            jamo_char = j2hcj(h2j(char))
+            result.extend(list(jamo_char))
+        else:
+            result.append(char)
 
-    # 각 단어에 대해 'ㅎ'가 포함되어 있는지 확인
-    for word in words:
-        if 'ㅎ' in word:
-            # 'ㅎ'의 위치를 저장
-            indices = [i for i, char in enumerate(word) if char == 'ㅎ']
-            error_index_list.extend(indices)
+    return result
 
-    if len(error_index_list) != 0:
-        return error_index_list
-    else:
-        return False
+# 분리한 문장을 다시 합침
+def rev_sentence(jamo_list):
+    result = []
+    jamo_buffer = []
 
+    def join_jamos(jamo_chars):
+        # 초성, 중성, 종성 유니코드 값
+        CHO = 0x1100
+        JUNG = 0x1161
+        JONG = 0x11A7
 
-# 테스트할 문장
-sentence = "좋은, 낳아, 대화, 교회, 많이 같이 후음 'ㅎ'가 존재하는 경우가 문장에 있는지 검사할 수 있어?"
+        if len(jamo_chars) == 2:
+            return chr(((ord(jamo_chars[0]) - CHO) * 588) + ((ord(jamo_chars[1]) - JUNG) * 28) + 44032)
+        elif len(jamo_chars) == 3:
+            return chr(((ord(jamo_chars[0]) - CHO) * 588) + ((ord(jamo_chars[1]) - JUNG) * 28) + (
+                        ord(jamo_chars[2]) - JONG) + 44032)
+        else:
+            raise ValueError("Invalid Jamo characters")
 
-print(check_h_presence(sentence))
+    for char in jamo_list:
+        if re.match('[ㅏ-ㅣㄱ-ㅎ]', char):
+            jamo_buffer.append(char)
+        else:
+            if jamo_buffer:
+                result.append(join_jamos(jamo_buffer))
+                jamo_buffer = []
+            result.append(char)
+
+    if jamo_buffer:
+        result.append(join_jamos(jamo_buffer))
+
+    return ''.join(result)
+
+# debug
+if __name__ == '__main__':
+    sentence = "안녕하세요, 반값습니다."
+    print(sep_sentence(sentence))
+    print(rev_sentence(sentence))

@@ -14,12 +14,13 @@ setup(
         'google-cloud-speech',
         'google-cloud-storage',
         'pydub',
-        'openai',
+        'openai>=1.30',
         'matplotlib',
         'torch',
         'transformers',
         'ffmpeg-python',
-        'konlpy'
+        'konlpy>=0.6.0',
+        'jamo>=0.4.1'
     ],
     data_files=[
         ('key', key_files),
