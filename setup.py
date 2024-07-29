@@ -13,6 +13,8 @@ setup(
         'pandas>=1.3.5',
         'google-cloud-speech>=2.26.0',
         'google-cloud-storage>=2.16.0',
+        'gspread>=6.1.2',
+        'oauth2client>=4.1.3',
         'pydub>=0.25.1',
         'openai>=1.30',
         'matplotlib>=3.5.1',
@@ -20,7 +22,7 @@ setup(
         'transformers>=4.40.2',
         'ffmpeg-python>=0.2.0',
         'konlpy>=0.6.0',
-        'jamo>=0.4.1'
+        'jamo>=0.4.1',
     ],
     data_files=[
         ('key', key_files),
