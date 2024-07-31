@@ -81,11 +81,20 @@ def STT_pipeline(askFolder=None, makeTrainData=None):
     # 결과
     if makeTrainData is None:
         makeTrainData = input("학습 데이터를 만들까요?(Y/N): ").strip().lower() == 'y'
-    if makeTrainData:
+    if makeTrainData and len(fileList) != 0:
         jsonl = input("jsonl데이터로 만들까요?(Y/N): ").strip().lower() == 'y'
         excelPath = open_dialog(False)
         convert_text_data(fileList, convert_result, jsonl, excelPath)
     else:
         convert_text_data(fileList, convert_result, True)
+
+    # .wav 파일 삭제
+    for file in fileList:
+        if file.suffix == '.wav':
+            try:
+                os.remove(file)
+                print(f"{file} 파일을 삭제했습니다.")
+            except Exception as e:
+                print(f"{file} 파일을 삭제하는 중 오류가 발생했습니다: {e}")
 
     print("완료.")
