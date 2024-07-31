@@ -5,6 +5,7 @@ import google.cloud.speech_v1p1beta1 as speech
 import google.cloud.storage as storage
 from common.info import open_dialog
 import re
+import os
 
 # STT
 def transcribe_audio(file_path):
