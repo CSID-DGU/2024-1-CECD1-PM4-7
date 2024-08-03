@@ -95,20 +95,22 @@ def draw_result(df: pd.DataFrame, filePath: Path):
     plt.savefig(outputPath, format='png')
     plt.close()
 
-def calculate_accuracy(df: pd.DataFrame) -> pd.DataFrame:
+def calculate_accuracy(df: pd.DataFrame, SER=True, COS=True) -> pd.DataFrame:
     load_models()
     original_text = df['original_text'].tolist()
     stt_output = df['stt_output'].tolist()
     corrected_text = df['corrected_text'].tolist()
 
     # SER 유사도
-    ser = [calculate_ser(orig, stt, cor) for orig, stt, cor in zip(original_text, stt_output, corrected_text)]
-    df['SER(ORI, STT)'] = [item[0] for item in ser]
-    df['SER(ORI, COR)'] = [item[1] for item in ser]
+    if SER:
+        ser = [calculate_ser(orig, stt, cor) for orig, stt, cor in zip(original_text, stt_output, corrected_text)]
+        df['SER(ORI, STT)'] = [item[0] for item in ser]
+        df['SER(ORI, COR)'] = [item[1] for item in ser]
 
     # 코사인 유사도
-    cos = [calculate_cos(orig, stt, cor) for orig, stt, cor in zip(original_text, stt_output, corrected_text)]
-    df['COS(ORI, STT)'] = [item[0] for item in cos]
-    df['COS(ORI, COR)'] = [item[1] for item in cos]
+    if COS:
+        cos = [calculate_cos(orig, stt, cor) for orig, stt, cor in zip(original_text, stt_output, corrected_text)]
+        df['COS(ORI, STT)'] = [item[0] for item in cos]
+        df['COS(ORI, COR)'] = [item[1] for item in cos]
 
     return df

@@ -49,5 +49,5 @@ def convert_text_data(fileList: list, data: list, to_jsonl: bool, excel=None):
             df.to_csv(new_filepath, index=False, encoding='utf-8')
 
     if excel:  # STT 학습용 데이터 생성
-        convert_stt_result(final_result, excel, to_jsonl)
+        return convert_stt_result(final_result, excel, to_jsonl)
 

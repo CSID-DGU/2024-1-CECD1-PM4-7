@@ -1,5 +1,6 @@
 from common import info
 import pandas as pd
+from tuning.calculate import calculate_levenshtein_distance
 
 # 완성된 xlsx파일에서 정답 데이터를 제거
 def remove_correct():
@@ -33,5 +34,21 @@ def remove_correct():
     df2.to_excel(filePath, index=False)
 
 
+# 완성된 엑셀 파일에서 SER을 계산
+def evaluate_SER():
+    filePath = info.open_dialog(False)
+    df = pd.read_excel(filePath)
+    df2 = pd.DataFrame(columns=["User content", "STT Result"])
+
+    df2["User content"] = df["User content"].str.replace(" ", "")
+    df2["STT Result"] = df["STT Result"].str.replace(" ", "")
+
+    # SER 계산
+    df['SER'] = [calculate_levenshtein_distance(orig, stt)/len(orig)
+           for orig, stt in zip(df2["User content"], df2["STT Result"])]
+    output_path = str(filePath).replace(".xlsx", "_calculated.xlsx")
+    df.to_excel(output_path, index=False)
+
+
 if __name__ == '__main__':
-    remove_correct()
+    evaluate_SER()
