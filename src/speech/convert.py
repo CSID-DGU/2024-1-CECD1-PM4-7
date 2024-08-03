@@ -29,7 +29,7 @@ def convert_file(filepath: Path) -> Path:
         .output(str(new_filepath), ar=16000)  # 16000Hz로 샘플레이트 설정
         .run(cmd='C:/ffmpeg/bin/ffmpeg.exe', quiet=True, overwrite_output=True)
     )
-    print(f"변환 완료: {filepath} -> {new_filepath}")
+    print(f"변환 완료: {new_filepath}")
     return new_filepath
 
 # 변환된 텍스트파일 가공
