@@ -12,10 +12,12 @@ auth_.googleAuth()
             = False: 파일을 선택하여 처리
     makeTrainData = True: 변환 결과를 학습 데이터로도 생성
             = False: 학습 데이터를 생성하지 않음
+    evaluation = True: makeTrainData를 통해 생성한 학습 데이터에서 정답을 제거
 '''
 
 
 STT.STT_pipeline(
     askFolder=True,
-    makeTrainData=True
+    makeTrainData=True,
+    evaluation=False
 )

@@ -1,9 +1,3 @@
-"""
-What to do
-1. Auth
-2.
-"""
-from pathlib import Path
 from openai import OpenAI
 
 import common.info
@@ -11,7 +5,7 @@ from common.auth_ import getKey
 from saveFile import makeAssistFile, applyChat
 from client import send_request
 
-PROMPT = common.info.getPrompt("playground")
+PROMPT = common.info.getPrompt("playground_chat")
 KEY = getKey('STT')
 client = OpenAI(api_key=KEY)
 

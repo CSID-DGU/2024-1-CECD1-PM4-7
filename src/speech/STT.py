@@ -4,7 +4,9 @@ from convert import convert_audio_files, convert_text_data
 import google.cloud.speech_v1p1beta1 as speech
 import google.cloud.storage as storage
 from common.info import open_dialog
+from evaluate import remove_correct
 import re
+import os
 
 # STT
 def transcribe_audio(file_path):
@@ -60,7 +62,7 @@ def transcribe_long_audio(file_path):
 def natural_sort_key(s):
     return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', str(s))]
 
-def STT_pipeline(askFolder=None, makeTrainData=None):
+def STT_pipeline(askFolder=None, makeTrainData=None, evaluation=False):
     convert_result = []
     if askFolder is None:
         askFolder = input("폴더를 선택할까요?(Y/N): ").strip().lower() == 'y'
@@ -81,11 +83,23 @@ def STT_pipeline(askFolder=None, makeTrainData=None):
     # 결과
     if makeTrainData is None:
         makeTrainData = input("학습 데이터를 만들까요?(Y/N): ").strip().lower() == 'y'
-    if makeTrainData:
+    if makeTrainData and len(fileList) != 0:
         jsonl = input("jsonl데이터로 만들까요?(Y/N): ").strip().lower() == 'y'
         excelPath = open_dialog(False)
         convert_text_data(fileList, convert_result, jsonl, excelPath)
     else:
         convert_text_data(fileList, convert_result, True)
 
+    # .wav 파일 삭제
+    for file in fileList:
+        if file.suffix == '.wav':
+            try:
+                os.remove(file)
+                print(f"{file} 파일을 삭제했습니다.")
+            except Exception as e:
+                print(f"{file} 파일을 삭제하는 중 오류가 발생했습니다: {e}")
+
+    # 정답 데이터 제거
+    if makeTrainData and evaluation:
+        remove_correct()
     print("완료.")
