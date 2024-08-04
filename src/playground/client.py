@@ -1,13 +1,13 @@
 
 
-def send_request(client, conversation_history, user_input: str):
+def send_request(client, conversation_history, user_input: str, model_name='gpt-4o-mini'):
     conversation_history.append({
         "role": "user",
         "content": user_input
     })
 
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model=model_name,
         messages=conversation_history,
         temperature=0.0,
         max_tokens=256,
