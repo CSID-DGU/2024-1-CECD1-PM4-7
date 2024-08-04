@@ -59,10 +59,9 @@ def convert_stt_result(sttResult: list, excelPath: Path, to_jsonl: bool):
 
     if len(sttResult) != len(df2):
         print("User content와 Assistant content의 길이가 다릅니다.")
-        print("데이터 확인이 필요합니다.")
 
     # 프롬프트
-    prompt = common.info.getPrompt("stt_train")
+    prompt = common.info.getPrompt("playground_stt")
 
     if to_jsonl:
         # JSONL 데이터 생성
@@ -70,7 +69,9 @@ def convert_stt_result(sttResult: list, excelPath: Path, to_jsonl: bool):
         for i in range(len(df2)):
             if i == 0:
                 continue
-            ac = df2.iloc[i]["User content"]
+            ac = ""
+            ac += f'1. {df.iloc[i]["User content"].replace(" ", "")}\n'
+            ac += f'2. {df2.iloc[i]["User content"]}'
             try:
                 uc = sttResult[i - 1]
             except IndexError:
@@ -108,3 +109,4 @@ def convert_stt_result(sttResult: list, excelPath: Path, to_jsonl: bool):
 
     print("STT 학습 데이터 생성 완료.")
     return output_file_path
+

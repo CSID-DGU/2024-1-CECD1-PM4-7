@@ -1,9 +1,3 @@
-"""
-What to do
-1. Auth
-2.
-"""
-from pathlib import Path
 from openai import OpenAI
 
 import common.info
