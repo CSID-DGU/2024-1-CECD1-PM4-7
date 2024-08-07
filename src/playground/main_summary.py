@@ -1,10 +1,12 @@
+import sys
+sys.path.append("C:\\Users\\Kimjemin\\Desktop\\대학 관련 파일\\4-1\\2024-1-CECD1-PM4-7\\src\\common")
 from openai import OpenAI
-import common.info
-from common.auth_ import getKey
+import info
+from auth_ import getKey
 from client import send_request
 import pandas as pd
 
-PROMPT = common.info.getPrompt("playground_summary")
+PROMPT = info.getPrompt("playground_summary")
 KEY = getKey('STT')
 client = OpenAI(api_key=KEY)
 
@@ -41,4 +43,4 @@ while True:
     new_row = pd.DataFrame({'User': [user_input], 'Assistant': [assistant_response]})
     conversation_df = pd.concat([conversation_df, new_row], ignore_index=True)
 
-conversation_df.to_csv('Summary_history.csv', index=False)
+conversation_df.to_csv('Summary_history.csv', index=False, encoding="utf-8-sig")
