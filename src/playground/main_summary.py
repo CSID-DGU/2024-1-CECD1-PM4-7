@@ -1,12 +1,10 @@
-import sys
-sys.path.append("C:\\Users\\Kimjemin\\Desktop\\대학 관련 파일\\4-1\\2024-1-CECD1-PM4-7\\src\\common")
 from openai import OpenAI
-import info
-from auth_ import getKey
+import common.info
+from common.auth_ import getKey
 from client import send_request
 import pandas as pd
 
-PROMPT = info.getPrompt("playground_summary")
+PROMPT = common.info.getPrompt("playground_summary")
 KEY = getKey('STT')
 client = OpenAI(api_key=KEY)
 
