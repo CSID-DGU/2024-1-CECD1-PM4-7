@@ -32,9 +32,10 @@ first_ment = f"{NAME}: " + ", ".join(EMERGENCY_LIST)
 
 # 대화 진행
 print("아무것도 입력하지 않고 전송 시 종료됩니다.\n")
-
-print(f"You: {first_ment}")
-print("Assistant: ", send_request(client, conversation_history, first_ment, MODEL))
+m = "홍길동: 요금체납, 주거위기, 고용위기, 긴급상황 위기"
+#print(f"You: {first_ment}")
+print(f"{m}")
+print("Assistant: ", send_request(client, conversation_history, m, MODEL))
 while True:
     user_input = input("You: ")
     if user_input.lower() == '':  # 종료
