@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="@android:color/black">
+
+    <!-- 발신자 전화번호 -->
+    <TextView
+        android:id="@+id/tvIncomingNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="02-494-1231"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/white"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dp"/>
+
+    <!-- 로고와 앱 이름 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tvIncomingNumber"
+        android:layout_centerHorizontal="true"
+        android:orientation="horizontal"
+        android:layout_marginTop="24dp">
+
+        <ImageView
+            android:id="@+id/ivLogo"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/logo_yellow"
+            android:contentDescription="로고 이미지"/>
+
+        <TextView
+            android:id="@+id/tvAppName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="복지봇"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginStart="12dp"
+            android:gravity="center"/>
+        <!-- android:textColor="@android:color/yellow" -->
+    </LinearLayout>
+
+    <!-- 상담 종료 문구 -->
+    <TextView
+        android:id="@+id/tvEndMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="상담 종료"
+        android:textSize="20sp"
+        android:textColor="@android:color/white"
+        android:layout_below="@id/ivLogo"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp"/>
+
+    <!-- 상담 진행 시간 -->
+    <TextView
+        android:id="@+id/tvCallDuration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="00:00"
+        android:textSize="18sp"
+        android:textColor="@android:color/white"
+        android:layout_below="@id/tvEndMessage"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp"/>
+
+    <!-- 안내 문구 -->
+    <TextView
+        android:id="@+id/tvGuideMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="상담하느라 수고하셨습니다.\n곧 상담사가 연락을 드릴 예정이니\n조금만 기다려주세요."
+        android:textSize="16sp"
+        android:textColor="@android:color/white"
+        android:layout_below="@id/tvCallDuration"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp"
+        android:gravity="center"/>
+</RelativeLayout>
