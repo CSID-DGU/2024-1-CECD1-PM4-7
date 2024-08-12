@@ -1,12 +1,8 @@
 package com.example.sibal
 
-import android.app.Service
 import android.content.Intent
-import android.net.wifi.rtt.CivicLocationKeys.STATE
-import android.os.IBinder
 import android.telecom.Call
 import android.telecom.InCallService
-import android.util.Log
 
 class MyInCallService : InCallService() {
 
