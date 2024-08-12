@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    tools:context=".CallInProgressActivity">
+
+    <ImageView
+        android:id="@+id/logo"
+        android:layout_width="65dp"
+        android:layout_height="65dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="20dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/logo_black" />
+
+    <TextView
+        android:id="@+id/name2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="40dp"
+        android:text="복지봇"
+        android:textColor="#000000"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toEndOf="@+id/logo"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/speaker"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="37dp"
+        android:layout_marginEnd="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/speaker_off" />
+
+    <TextView
+        android:id="@+id/message1"
+        android:layout_width="350dp"
+        android:layout_height="60dp"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="108dp"
+        android:layout_marginEnd="30dp"
+        android:background="@drawable/rounded_rectangle1"
+        android:gravity="center"
+        android:text="모든 대화는 인공지능 알고리즘에 의해 자동 \n 생성되는 것으로 사실과 다를 수 있습니다."
+        android:textColor="#808080"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/date"
+        android:layout_width="140dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="130dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="130dp"
+        android:background="@drawable/rounded_rectangle1"
+        android:gravity="center"
+        android:text="2024.08.14"
+        android:textColor="#808080"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/message1" />
+
+    <EditText
+        android:id="@+id/textBox"
+        android:layout_width="300dp"
+        android:layout_height="31dp"
+        android:layout_marginStart="52dp"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/rounded_rectangle2"
+        android:cursorVisible="true"
+        android:gravity="center_vertical|start"
+        android:paddingStart="10dp"
+        android:text="메시지 입력"
+        android:textColor="#808080"
+        android:textCursorDrawable="@null"
+        app:layout_constraintBottom_toTopOf="@+id/decline2"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageView
+        android:id="@+id/microphoneOn"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="115dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/textBox"
+        app:srcCompat="@drawable/microphone_on" />
+
+    <ImageView
+        android:id="@+id/decline2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="5dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:srcCompat="@drawable/decline"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

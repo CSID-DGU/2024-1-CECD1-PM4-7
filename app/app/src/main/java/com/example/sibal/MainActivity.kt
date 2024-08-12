@@ -1,7 +1,10 @@
 package com.example.sibal
 
 import android.Manifest
+import android.Manifest.permission.ANSWER_PHONE_CALLS
 import android.app.role.RoleManager
+import android.content.Context.ROLE_SERVICE
+import android.content.Context.TELECOM_SERVICE
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -15,12 +18,18 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemService
 
 class MainActivity : AppCompatActivity() {
+    val permissions = arrayOf(
+        Manifest.permission.READ_PHONE_STATE,
+        Manifest.permission.ANSWER_PHONE_CALLS,
+        Manifest.permission.CALL_PHONE
+    )
+
     override fun onCreate(savedInstancestate: Bundle?) {
         super.onCreate(savedInstancestate)
         Log.d("메인 액티비티", "메인 액티비티 실행")
-
         //퍼미션 런처 생성
         val permissionLauncher =
             registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
@@ -33,7 +42,9 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         //퍼미션 런처 실행
-        permissionLauncher.launch("android.permission.READ_PHONE_STATE")
+        for(permission in permissions) {
+            permissionLauncher.launch(permission)
+        }
 
         val telecomManager = getSystemService(TELECOM_SERVICE) as TelecomManager
         val roleManager = getSystemService(ROLE_SERVICE) as RoleManager
