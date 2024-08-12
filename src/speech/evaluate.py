@@ -1,6 +1,7 @@
 from common import info
 import pandas as pd
 from tuning.calculate import calculate_levenshtein_distance
+from playground.client import send_request
 
 # 완성된 xlsx파일에서 정답 데이터를 제거
 def remove_correct():
@@ -49,6 +50,10 @@ def evaluate_SER():
     output_path = str(filePath).replace(".xlsx", "_calculated.xlsx")
     df.to_excel(output_path, index=False)
 
+
+# 평가모델
+def evaluation_model():
+    pass
 
 if __name__ == '__main__':
     evaluate_SER()
