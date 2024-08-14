@@ -12,6 +12,7 @@ setup(
     install_requires=[
         'pandas>=1.3.5',
         'openpyxl>=3.1.5',
+        'requests>=2.31.0',
         'google-cloud-speech>=2.26.0',
         'google-cloud-storage>=2.16.0',
         'gspread>=6.1.2',

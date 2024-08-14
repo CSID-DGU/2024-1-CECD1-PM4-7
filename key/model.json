@@ -1,5 +1,5 @@
 {
-  "STT": "ft:gpt-3.5-turbo-1106:pm4:stt-correction:9XMvEhr3",
-  "STTv2": "ft:gpt-3.5-turbo-1106:pm4:stt-4o-v1:9sKWQcVT",
+  "stt_correction": "ft:gpt-4o-mini-2024-07-18:pm4:stt-correction-v1:9vhCU4YA",
+  "stt_validate" : "ft:gpt-4o-mini-2024-07-18:pm4:stt-validation-v2:9vKYabN6",
   "Chat": "ft:gpt-3.5-turbo-1106:pm4:conversation-001:9X9FU3ko"
 }

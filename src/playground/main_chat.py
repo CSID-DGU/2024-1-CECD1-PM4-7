@@ -32,7 +32,6 @@ first_ment = f"{NAME}: " + ", ".join(EMERGENCY_LIST)
 
 # 대화 진행
 print("아무것도 입력하지 않고 전송 시 종료됩니다.\n")
-
 print(f"You: {first_ment}")
 print("Assistant: ", send_request(client, conversation_history, first_ment, MODEL))
 while True:
