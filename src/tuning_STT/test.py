@@ -14,7 +14,10 @@ def stt_correction_test():
     # DataFrame 초기화
     filepath = open_dialog(False)
     df = pd.read_excel(filepath)
-    result = []
+
+    ar1 = []
+    ar2 = []
+    ar3 = []
     for index, row in df.iterrows():
         user_input = f"질문: {row['Question']}, 답변: {row['STT Result']}"
 
@@ -34,9 +37,14 @@ def stt_correction_test():
 
         # 응답 출력
         print("Assistant:", assistant_response)
-        result.append(assistant_response)
+        result = assistant_response.split('\n')
+        ar1.append(result[0].split('.')[1])
+        ar2.append(result[1].split('.')[1])
+        ar3.append(result[2].split('.')[1])
 
-    df["Correction Result"] = result
+    df["Correction Result 1"] = ar1
+    df["Correction Result 2"] = ar2
+    df["Correction Result 3"] = ar3
     df.to_excel(str(filepath).replace(".xlsx", "_corrected.xlsx"), index=False)
 
 
@@ -48,12 +56,11 @@ def stt_validation_test():
 
     # DataFrame 초기화
     filepath = open_dialog(False)
-    conversation_df = pd.read_excel(filepath)
-    question = "건강 문제가 있으십니까?"
+    df = pd.read_excel(filepath)
 
     result = []
-    for stt_output in conversation_df["STT Result"]:
-        user_input = f'질문: "{question}", 답변: "{stt_output}"'
+    for index, row in df.iterrows():
+        user_input = f"질문: {row['Question']}, 답변: {row['Correction Result 3']}"
         # 대화 기록 초기화
         conversation_history = [
             {
@@ -73,10 +80,10 @@ def stt_validation_test():
         print("Assistant:", assistant_response)
         result.append(assistant_response)
 
-    conversation_df["Validate Result"] = result
-    conversation_df.to_excel(str(filepath).replace(".xlsx", "_validated.xlsx"), index=False)
-    conversation_df.to_csv(str(filepath).replace(".xlsx", "_validated.csv"), index=False)
+    df["Validate Result"] = result
+    df.to_excel(str(filepath).replace(".xlsx", "_validated.xlsx"), index=False)
 
 
 if __name__ == '__main__':
-    stt_correction_test()
+    # stt_correction_test()
+    stt_validation_test()
