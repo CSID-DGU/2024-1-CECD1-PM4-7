@@ -7,14 +7,15 @@ from pathlib import Path
 
 
 # 학습 데이터 형태를 갖춘 엑셀파일을 사용
-def completed_xlsx_to_jsonl(filepath: Path) -> Path:
+def completed_xlsx_to_jsonl(promptName: str, filepath: Path) -> Path:
     df_conv = pd.read_excel(filepath)
     json_list = []
+    prompt = common.info.getPrompt(promptName)
 
     for index, row in df_conv.iterrows():
         message = {
             "messages": [
-                {"role": "system", "content": row['System content']},
+                {"role": "system", "content": prompt},
                 {"role": "user", "content": row['User content']},
                 {"role": "assistant", "content": row['Assistant content']}
             ]
@@ -110,3 +111,7 @@ def convert_stt_result(sttResult: list, excelPath: Path, to_jsonl: bool):
     print("STT 학습 데이터 생성 완료.")
     return output_file_path
 
+
+if __name__ == '__main__':
+    filepath = common.info.open_dialog(False)
+    completed_xlsx_to_jsonl("stt_validate", filepath)

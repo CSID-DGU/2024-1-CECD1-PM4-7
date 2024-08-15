@@ -1,6 +1,7 @@
 import pprint
 import wave
 from convert import convert_audio_files, convert_text_data
+from CLOVA_STT import stt_clova
 import google.cloud.speech_v1p1beta1 as speech
 import google.cloud.storage as storage
 from common.info import open_dialog
@@ -62,7 +63,7 @@ def transcribe_long_audio(file_path):
 def natural_sort_key(s):
     return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', str(s))]
 
-def STT_pipeline(askFolder=None, makeTrainData=None, evaluation=False):
+def STT_pipeline(askFolder=None, model='google', makeTrainData=None, evaluation=False):
     convert_result = []
     if askFolder is None:
         askFolder = input("폴더를 선택할까요?(Y/N): ").strip().lower() == 'y'
@@ -75,7 +76,10 @@ def STT_pipeline(askFolder=None, makeTrainData=None, evaluation=False):
 
     # STT
     for file in fileList:
-        converted = transcribe_audio(file)
+        if model == 'google':
+            converted = transcribe_audio(file)
+        elif model == 'clova':
+            converted = stt_clova(file)
         print(f"{file} 변환 결과: ")
         pprint.pprint(converted)
         convert_result.append(converted)
