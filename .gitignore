@@ -168,3 +168,8 @@ key/vocal-entity-420406-b9648ba69fca.json
 public/*
 !public/*.md
 !public/*.json
+
+# Virtual Env.
+src/train_llama/*/
+src/train_llama/*.gguf
+!src/train_llama/*/* 
