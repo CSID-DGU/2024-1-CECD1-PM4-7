@@ -8,6 +8,6 @@
 ```
 make install
 make gguf
-make setup
+make setup_CPU
 make kernel
 ```

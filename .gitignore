@@ -171,4 +171,5 @@ public/*
 
 # Virtual Env.
 src/train_llama/*/
+src/train_llama/*.gguf
 !src/train_llama/*/* 

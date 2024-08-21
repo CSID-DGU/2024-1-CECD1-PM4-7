@@ -22,6 +22,7 @@ gguf:
 setup_CPU:
 	source ${VENV}/bin/activate && \
 	pip install llama-cpp-python && \
+	pip install ipykernel && \
 	git clone https://github.com/ggerganov/llama.cpp.git && \
 	cd ./llama.cpp && \
 	pip install -r requirements.txt && \
