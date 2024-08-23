@@ -4,6 +4,18 @@ SHELL := /bin/bash
 VENV = gguf
 PYTHON = python3
 
+all_CPU:
+	make install
+	make gguf
+	make setup_CPU
+	make kernel
+
+all_GPU:
+	make install
+	make gguf
+	make setup_GPU
+	make kernel
+
 # install required packages
 install:
 	sudo apt update
@@ -12,6 +24,7 @@ install:
 	sudo apt-get install cmake
 	sudo apt install python3.10-venv
 	sudo apt install git
+	sudo apt-get install python3-tk
 
 # making virtual env.
 gguf:
@@ -37,7 +50,7 @@ setup_GPU: # on progress
 	git clone https://github.com/ggerganov/llama.cpp.git && \
 	cd ./llama.cpp && \
 	pip install -r requirements.txt && \
-	pip install torch==2.4.0 torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu && \
+	pip install torch==2.4.0 && \
 	make -j8
 
 # setting up Jupyter kernel

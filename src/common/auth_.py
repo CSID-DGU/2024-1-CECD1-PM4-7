@@ -22,8 +22,8 @@ def getKey(title: str):
     return key_data[title]
 
 # Auth - google
-def googleAuth():
-    key_path = str(key_folder / "vocal-entity-420406-b9648ba69fca.json")
+def googleAuth(filename="vocal-entity-420406-b9648ba69fca.json"):
+    key_path = str(key_folder / filename)
     # 서비스 계정 키 파일의 경로를 환경 변수로 설정
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
 

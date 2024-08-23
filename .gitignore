@@ -162,6 +162,7 @@ cython_debug/
 # key
 key/key.json
 key/vocal-entity-420406-b9648ba69fca.json
+key/llama-433214-97936398ef7a.json
 !key/*.md
 
 # test audio

@@ -4,10 +4,7 @@
 2. llama모델 실행
 3. llama모델 학습
 
-### 설치(```train_llama``` 폴더로 이동)
-```
-make install
-make gguf
-make setup_CPU
-make kernel
-```
+### 설치
+1. ```cd src/train_llama```
+2. CUDA코어가 없다면 ```make all_CPU``` \
+   CUDA코어가 있다면 ```make all_GPU```
