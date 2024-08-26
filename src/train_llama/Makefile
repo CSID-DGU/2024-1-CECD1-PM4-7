@@ -7,35 +7,42 @@ PYTHON = python3
 all_CPU:
 	make install
 	make gguf
+	make pip
 	make setup_CPU
 	make kernel
 
 all_GPU:
 	make install
 	make gguf
+	make pip
 	make setup_GPU
 	make kernel
 
 # install required packages
 install:
-	sudo apt update
-	sudo apt-get install libgomp1
-	sudo apt install build-essential
-	sudo apt-get install cmake
-	sudo apt install python3.10-venv
-	sudo apt install git
-	sudo apt-get install python3-tk
+	sudo apt update && \
+	sudo apt-get install libgomp1 && \
+	sudo apt install build-essential && \
+	sudo apt-get install cmake && \
+	sudo apt install python3.10-venv && \
+	sudo apt install git && \
 
 # making virtual env.
 gguf:
 	${PYTHON} -m venv ${VENV} && \
 	source ${VENV}/bin/activate
 
-# setting virtual env.
-setup_CPU:
+# pip packages
+pip:
 	source ${VENV}/bin/activate && \
 	pip install llama-cpp-python && \
 	pip install ipykernel && \
+	pip install google-cloud-storage && \
+	pip install jupyter
+
+# setting virtual env.
+setup_CPU:
+	source ${VENV}/bin/activate && \
 	git clone https://github.com/ggerganov/llama.cpp.git && \
 	cd ./llama.cpp && \
 	pip install -r requirements.txt && \
@@ -43,10 +50,7 @@ setup_CPU:
 	make -j8
 
 setup_GPU: # on progress
-	source ${VENV}/bin/activate && \
-	pip install llama-cpp-python && \
-	pip install ipykernel && \
-	pip install jupyter && \
+	source ${VENV}/bin/activate && \	
 	git clone https://github.com/ggerganov/llama.cpp.git && \
 	cd ./llama.cpp && \
 	pip install -r requirements.txt && \
