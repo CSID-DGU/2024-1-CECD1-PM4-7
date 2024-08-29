@@ -53,19 +53,19 @@ def stt_correction_trainData_LLaMA():
 
     json_list = []
     for index, row in df.iterrows():
-        user_input = f'질문: {row["Question"]},\n답변: {row["STT Result"]}'
+        user_input = f'질문: {row["Question"]}, 답변: {row["STT Result"]}'
         output = (f'1. {row["Assistant content 1"]}\n'
                 f'2. {row["Assistant content 2"]}\n'
                 f'3. {row["Assistant content 3"]}')
         
         message = {
-            "instruction": PROMPT.split('.')[1],
+            "instruction": '.'.join(PROMPT.split('.')[1:]),
             "input": user_input,
             "output": output,
             "system": PROMPT.split('.')[0]
         }
         
-        json_list.append(json.dumps(message, ensure_ascii=False))
+        json_list.append(json.dumps(message, ensure_ascii=False, indent=4))
 
     # Define the output file path with the same name as the input but with .json extension
     output_file_path = filepath.with_suffix('.json')
