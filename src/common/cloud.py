@@ -110,3 +110,5 @@ def move_folder(bucket_name, source_folder_name, destination_folder_name):
         relative_path = os.path.relpath(blob.name, source_folder_name)
         new_blob_name = os.path.join(destination_folder_name, relative_path)
         move_blob(bucket_name, blob.name, new_blob_name)
+
+        
