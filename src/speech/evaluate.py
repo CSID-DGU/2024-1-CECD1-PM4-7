@@ -1,7 +1,9 @@
-from common import info
 import pandas as pd
-from tuning.calculate import calculate_levenshtein_distance
+
+from common import info
 from playground.client import send_request
+from tuning_STT.calculate import calculate_levenshtein_distance
+
 
 # 완성된 xlsx파일에서 정답 데이터를 제거
 def remove_correct():
