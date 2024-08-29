@@ -168,7 +168,7 @@ key/llama-433214-97936398ef7a.json
 # test audio
 public/*
 !public/*.md
-!public/*.json
+public/*.json
 
 # Virtual Env.
 src/train_llama/*/
