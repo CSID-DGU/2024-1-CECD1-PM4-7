@@ -7,22 +7,21 @@ from common.info import getPrompt, open_dialog
 
 
 # COT 1단계: 문장의 의도파악
-def stt_correction_trainData_LLaMA():
+def stt_correction_LLaMA_COT1():
     PROMPT = getPrompt("stt_correction")
     # DataFrame
     filepath = open_dialog(False)
-    df = pd.read_excel(filepath)
+    df = pd.read_csv(filepath)
 
     json_list = []
     for index, row in df.iterrows():
-        user_input = f'질문: {row["Question"]},\n답변: {row["STT Result"]}'
-        output = (row["Assistant content 1"])
+        user_input = f'질문: {row["Question"]}, 답변: {row["STT Result"]}'
+        output = (row["Assistant Content 1"])
         
         message = {
-            "instruction": '답변의 의도를 파악하라.',
+            "instruction": '질문에 대한 답변을 분석하라.',
             "input": user_input,
             "output": output,
-            "system": PROMPT.split('.')[0]
         }
         
         json_list.append(json.dumps(message, ensure_ascii=False, indent=4))
@@ -32,3 +31,6 @@ def stt_correction_trainData_LLaMA():
     with output_file_path.open('w', encoding='utf-8-sig') as f:
         for item in json_list:
             f.write(item + '\n')
+
+if __name__ == '__main__':
+    stt_correction_LLaMA_COT1()

@@ -1,9 +1,14 @@
-# 데이터 확장 기능에서 중복을 제거하는 모듈
-import pandas as pd
-from common.info import open_dialog
+# 데이터 확장기능 관련 모듈
 import re
+from pathlib import Path
 
-if __name__ == '__main__':
+import pandas as pd
+
+from common.info import open_dialog
+
+
+# 중복된 데이터 제거
+def remove_duplication():
     path = open_dialog(False, "선택", [("Csv files", "*.csv")])
     df = pd.read_csv(path, encoding='utf-8')
 
@@ -34,3 +39,30 @@ if __name__ == '__main__':
 
     print(f"{new_file_path}에 파일 저장 완료")
     print(f"{original_row_count - final_row_count}개 데이터 삭제됨")
+
+
+# 학습 데이터 생성 - 형식 맞추기
+def postprocess():
+    path = open_dialog(False, "선택", [("Csv files", "*.csv")])
+    df = pd.read_csv(path, encoding='utf-8')
+    result_df = pd.DataFrame()
+    
+    # 1. 질문
+    question = input("질문: ")
+
+    # 2. 데이터
+    raw_data = df['Completion'].apply(lambda x: x.split(':')[1].strip())
+    
+    result_df['Question'] = [question] * len(df)
+    result_df['STT Result'] = raw_data
+    
+    original_path = Path(path)
+    save_path = original_path.with_stem(original_path.stem + '_GPTinput')
+    
+    # 결과를 CSV 파일로 저장
+    result_df.to_csv(save_path, index=False, encoding='utf-8-sig')
+    print(f"결과가 {save_path}에 저장되었습니다.")
+
+
+if __name__ == '__main__':
+    postprocess()
