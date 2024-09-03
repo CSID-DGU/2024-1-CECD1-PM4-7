@@ -20,10 +20,10 @@ all_GPU:
 
 all_Colab:
 	make install
-	make gguf
-	make pip
-	make setup_GPU
-
+	pip install llama-cpp-python && \
+	git clone https://github.com/ggerganov/llama.cpp.git && \
+	cd ./llama.cpp && pip install -r requirements.txt && pip install torch==2.4.0 && make -j8
+	
 # install required packages
 install:
 	sudo apt update
