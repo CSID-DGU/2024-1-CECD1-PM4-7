@@ -21,9 +21,6 @@ all_GPU:
 all_Colab:
 	make install
 	pip install llama-cpp-python && \
-	pip install ipykernel && \
-	pip install google-cloud-storage && \
-	pip install jupyter
 	git clone https://github.com/ggerganov/llama.cpp.git && \
 	cd ./llama.cpp && pip install -r requirements.txt && pip install torch==2.4.0 && make -j8
 	
