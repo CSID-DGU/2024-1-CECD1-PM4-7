@@ -164,6 +164,7 @@ key/key.json
 key/vocal-entity-420406-b9648ba69fca.json
 key/llama-433214-97936398ef7a.json
 !key/*.md
+backend/functions/key/vocal-entity-420406-b9648ba69fca.json
 
 # test audio
 public/*
@@ -174,3 +175,10 @@ public/*.json
 src/train_llama/*/
 src/train_llama/*.gguf
 !src/train_llama/*/* 
+
+# Dependency directories
+backend/functions/node_modules
+backend/node_modules
+
+# local file
+*.local
