@@ -76,8 +76,9 @@ app.post("/voice", async (req, res) => {
   twiml.record({
     action: "/app/recording-complete", // 녹음이 끝난 후 호출되는 웹훅
     method: "POST",
-    timeout: 1, // 사용자 응답을 기다리는 시간
+    timeout: 1.5, // 사용자 응답을 기다리는 시간
     transcribe: false,
+    format: "mp3",
   });
 
   res.type("text/xml");
@@ -89,13 +90,19 @@ app.post("/recording-complete", async (req, res) => {
   const recordingUrl = req.body.RecordingUrl;
   console.log("녹음 파일 URL:", recordingUrl);
 
+  let responseSent = false; // 중복 응답 방지 플래그
+
   /**
    * 녹음 파일 다운로드, STT, GPT 처리를 수행하는 함수
-   * @async
    * @function processRecording
    * @return {Promise<void>} - 함수가 완료될 때까지 기다림
    */
   async function processRecording() {
+    // 음성 파일 처리가 이미 끝났을 경우 종료
+    if (responseSent) {
+      console.log("processRecording()종료");
+      return;
+    }
     try {
       // 녹음 파일 다운로드
       const {status, data: recordingData} =
@@ -105,6 +112,7 @@ app.post("/recording-complete", async (req, res) => {
 
       // 녹음 파일이 다운로드 가능한 경우에만 파일 처리
       if (status === 200) {
+        responseSent = true; // 음성 파일 처리가 완료되었음을 표시
         clearInterval(checkRecordingInterval); // 파일이 성공적으로 다운로드되면 반복 중지
         console.log(`녹음 파일 다운로드 성공 - HTTP 상태 코드: ${status}`);
 
@@ -121,21 +129,11 @@ app.post("/recording-complete", async (req, res) => {
         // GPT 응답 음성 출력
         const twiml = new VoiceResponse();
         twiml.say({language: "ko-KR"}, gptContent);
-
-        twiml.record({
-          action: "/app/recording-complete", // 녹음 완료 후 다시 이 엔드포인트 호출
-          method: "POST",
-          timeout: 1, // 사용자 응답을 기다리는 시간
-          transcribe: false,
-        });
-
         res.type("text/xml");
         res.send(twiml.toString());
       } else if (status === 404) {
         // 파일이 아직 저장되지 않은 경우 처리
         console.log("녹음 파일이 아직 저장되지 않았습니다. 다시 시도 중...");
-      } else {
-        console.log(`녹음 파일 다운로드 실패 - HTTP 상태 코드: ${status}`);
       }
     } catch (error) {
       clearInterval(checkRecordingInterval); // 오류 발생 시 반복 중지
