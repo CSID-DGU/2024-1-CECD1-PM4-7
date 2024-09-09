@@ -22,6 +22,7 @@ async function downloadRecording(url) {
         "Authorization": `Basic ${Buffer
             .from(`${accountSid}:${authToken}`)
             .toString("base64")}`,
+        "Host": "api.twilio.com",
       },
     });
 
