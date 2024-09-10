@@ -66,8 +66,6 @@ async function transcribeAudio(audioBuffer) {
       .map((result) => result.alternatives[0].transcript)
       .join("\n");
 
-  console.log("전사된 사용자 응답1: ", transcription); // 전사된 텍스트를 로그로 출력
-
   return transcription;
 }
 

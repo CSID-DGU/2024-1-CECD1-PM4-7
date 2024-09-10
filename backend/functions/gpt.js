@@ -53,14 +53,17 @@ async function getGPTResponse(clientId, gptRequest) {
 
   // gpt 응답 추출
   const gptResponse = response.choices[0].message;
+  const gptContent = gptResponse.content;
 
   // GPT의 응답을 대화 기록에 추가
   conversationHistory.push({
     role: "assistant",
-    content: gptResponse,
+    content: gptContent,
   });
 
-  return gptResponse;
+  console.log(conversationHistory);
+
+  return gptContent;
 }
 
 module.exports = {getGPTResponse};
