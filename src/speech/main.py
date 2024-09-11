@@ -1,6 +1,7 @@
 # STT main
-from common import auth_
 import STT
+
+from common import auth_
 
 # Auth
 auth_.googleAuth()
@@ -20,5 +21,5 @@ STT.STT_pipeline(
     askFolder=True,
     model='google',
     makeTrainData=True,
-    evaluation=True
+    evaluation=False
 )

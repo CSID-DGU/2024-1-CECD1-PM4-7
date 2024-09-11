@@ -1,13 +1,16 @@
+import os
 import pprint
+import re
 import wave
-from convert import convert_audio_files, convert_text_data
-from CLOVA_STT import stt_clova
+
+# from CLOVA_STT import stt_clova
 import google.cloud.speech_v1p1beta1 as speech
 import google.cloud.storage as storage
-from common.info import open_dialog
+from convert import convert_audio_files, convert_text_data
 from evaluate import remove_correct
-import re
-import os
+
+from common.info import open_dialog
+
 
 # STT
 def transcribe_audio(file_path):
@@ -78,8 +81,8 @@ def STT_pipeline(askFolder=None, model='google', makeTrainData=None, evaluation=
     for file in fileList:
         if model == 'google':
             converted = transcribe_audio(file)
-        elif model == 'clova':
-            converted = stt_clova(file)
+        # elif model == 'clova':
+        #     converted = stt_clova(file)
         print(f"{file} 변환 결과: ")
         pprint.pprint(converted)
         convert_result.append(converted)
