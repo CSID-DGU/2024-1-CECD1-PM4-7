@@ -17,7 +17,7 @@ const conversations = {};
 
 /**
  * STT로 전사된 텍스트를 GPT API에 전달하고 응답을 처리하는 함수
- * @param {string} clientId - 클라이언트를 식별 ID (각 클라이언트의 대화 기록을 독립적으로 관리하기 위해 사용)
+ * @param {string} clientId - 클라이언트 식별 ID (각 클라이언트의 대화 기록을 독립적으로 관리하기 위해 사용)
  * @param {string} gptRequest - GPT에 전달할 요청 텍스트
  * @return {Promise<string>} GPT의 응답 텍스트
  */
@@ -32,10 +32,8 @@ async function getGPTResponse(clientId, gptRequest) {
     ];
   }
 
-  const conversationHistory = conversations[clientId];
-
   // 사용자의 요청을 대화 기록에 추가
-  conversationHistory.push({
+  conversations[clientId].push({
     role: "user",
     content: gptRequest,
   });
@@ -43,7 +41,7 @@ async function getGPTResponse(clientId, gptRequest) {
   // 대화 기록을 기반으로 GPT API에 응답을 요청
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
-    messages: conversationHistory,
+    messages: conversations[clientId],
     temperature: 0.0,
     max_tokens: 256,
     top_p: 0.0,
@@ -56,14 +54,22 @@ async function getGPTResponse(clientId, gptRequest) {
   const gptContent = gptResponse.content;
 
   // GPT의 응답을 대화 기록에 추가
-  conversationHistory.push({
+  conversations[clientId].push({
     role: "assistant",
     content: gptContent,
   });
 
-  console.log(conversationHistory);
-
+  console.log(conversations[clientId]);
   return gptContent;
 }
 
-module.exports = {getGPTResponse};
+/**
+ * 진행된 GPT 대화 기록을 삭제하는 함수
+ * @param {string} clientId - 클라이언트 식별 ID
+ * @return {Promise<void>}
+ */
+async function removeConversations(clientId) {
+  delete conversations[clientId];
+}
+
+module.exports = {getGPTResponse, removeConversations};
