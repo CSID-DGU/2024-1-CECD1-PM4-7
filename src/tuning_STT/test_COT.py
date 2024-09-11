@@ -49,7 +49,7 @@ def createData_fromGPT():
 
 # COT 1단계: 문장의 의도파악
 def stt_correction_LLaMA_COT1():
-    # DataFrame
+    # DataFrame 불러오기
     filepath = open_dialog(False)
     df = pd.read_csv(filepath)
 
@@ -64,13 +64,13 @@ def stt_correction_LLaMA_COT1():
             "output": output,
         }
         
-        json_list.append(json.dumps(message, ensure_ascii=False, indent=4))
-    output_file_path = filepath.with_suffix('.json')
+        json_list.append(message)
 
-    # Write the JSON data to the output file
+    # JSON 배열로 결과물 저장
+    output_file_path = filepath.with_suffix('.json')
     with output_file_path.open('w', encoding='utf-8-sig') as f:
-        for item in json_list:
-            f.write(item + '\n')
+        json.dump(json_list, f, ensure_ascii=False, indent=4)
+
 
 if __name__ == '__main__':
     # createData_fromGPT()
