@@ -9,8 +9,13 @@ from common.info import open_dialog
 
 # 중복된 데이터 제거
 def remove_duplication():
-    path = open_dialog(False, "선택", [("Csv files", "*.csv")])
-    df = pd.read_csv(path, encoding='utf-8')
+    path = open_dialog(False)
+    try:
+        filetype = "csv"
+        df = pd.read_csv(path, encoding='utf-8')
+    except:
+        filetype = "xlsx"
+        df = pd.read_excel(path)
 
     # 1. 모든 행의 User 입력 통일
     first_column_first_value = df.iloc[0, 0]
@@ -29,13 +34,13 @@ def remove_duplication():
     final_row_count = len(df)
 
     # 4. 저장
-    file_stem = path.stem
-    match = re.match(r'(.*)_(\d+)_augm', file_stem)
-    topic = match.group(1)
-    number = int(match.group(2))
-    new_file_name = f"{topic}_{number+1}.csv"
-    new_file_path = path.with_name(new_file_name)
-    df.to_csv(new_file_path, index=False, encoding='utf-8-sig')
+    new_file_name = path.stem + "_cleaned"
+    new_file_path = path.with_name(new_file_name).with_suffix(f'.{filetype}')
+    
+    if filetype == "csv":
+        df.to_csv(new_file_path, index=False, encoding='utf-8-sig')
+    else:
+        df.to_excel(new_file_path, index=False)
 
     print(f"{new_file_path}에 파일 저장 완료")
     print(f"{original_row_count - final_row_count}개 데이터 삭제됨")
@@ -65,4 +70,5 @@ def postprocess():
 
 
 if __name__ == '__main__':
-    postprocess()
+    remove_duplication()
+    # postprocess()
