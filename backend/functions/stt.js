@@ -27,14 +27,11 @@ async function downloadRecording(url) {
     });
 
     const buffer = Buffer.from(response.data);
-    console.log(`녹음 파일 크기: ${buffer.length}`);
     return {status: response.status, data: buffer};
   } catch (error) {
     if (error.response && error.response.status === 404) {
-      console.log("녹음 파일이 아직 준비되지 않았을 수 있습니다.");
       return {status: 404};
     } else {
-      console.error("녹음 파일 다운로드 중 오류 발생1:", error);
       throw error;
     }
   }

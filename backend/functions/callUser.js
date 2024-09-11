@@ -35,6 +35,8 @@ async function callUser() {
       url: `https://us-central1-welfarebot-7cbc3.cloudfunctions.net/app/voice?message=${encodeURIComponent(message)}&gptRequest=${encodeURIComponent(gptRequest)}`,
       to: userPhoneNumber,
       from: "+12566699723",
+      statusCallback: "https://us-central1-welfarebot-7cbc3.cloudfunctions.net/app/call-completed",
+      statusCallbackEvent: ["completed"],
     });
   });
 }
