@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from tuning_STT.expand import remove_duplication
 from common.info import open_dialog
 
 
@@ -28,7 +29,7 @@ def merge_json(filename: str):
         json.dump(result, f, ensure_ascii=False, indent=4)
 
 
-def merge_excel_files(sort=True):
+def merge_excel_files(sort=True) -> Path:
     fileList = []
     
     # 파일 선택 및 추가
@@ -55,6 +56,7 @@ def merge_excel_files(sort=True):
     merged_df.to_excel(output_filename, index=False)
     
     print(f"병합된 파일이 {output_filename}로 저장되었습니다.")
+    return output_filename
 
 
 def merge_jsonl_files(directory, output_file, file_pattern, start, end):
@@ -72,4 +74,5 @@ def merge_jsonl_files(directory, output_file, file_pattern, start, end):
 
 if __name__ == '__main__':
     # merge_json('stt_train')
-    merge_excel_files(True)
+    fp = merge_excel_files(True)
+    remove_duplication(fp)

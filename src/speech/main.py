@@ -21,5 +21,5 @@ STT.STT_pipeline(
     askFolder=True,
     model='google',
     makeTrainData=True,
-    evaluation=False
+    evaluation=True
 )

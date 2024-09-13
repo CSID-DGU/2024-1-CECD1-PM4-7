@@ -35,7 +35,7 @@ def convert_file(filepath: Path) -> Path:
     return new_filepath
 
 # 변환된 텍스트파일 가공
-def convert_text_data(fileList: list, data: list, to_jsonl: bool, excel=None):
+def convert_text_data(fileList: list, data: list, to_jsonl: bool, excel=None, suffix='') -> Path:
     final_result = []
     for i, filepath in enumerate(fileList):
         sttResult = data[i]
@@ -60,5 +60,7 @@ def convert_text_data(fileList: list, data: list, to_jsonl: bool, excel=None):
             extra_rows = pd.DataFrame(index=range(len_final_result - len_df), columns=df.columns)
             df = pd.concat([df, extra_rows], ignore_index=True)
         df['STT Result'] = final_result
-        output_file = excel.with_stem(excel.stem + "_STT")
+        output_file = excel.with_stem(excel.stem + f"_{suffix}")
         df.to_excel(output_file, index=False)
+
+        return output_file

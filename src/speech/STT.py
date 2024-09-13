@@ -2,13 +2,13 @@ import os
 import pprint
 import re
 import wave
-
+import pandas as pd
 # from CLOVA_STT import stt_clova
 import google.cloud.speech_v1p1beta1 as speech
 import google.cloud.storage as storage
 from convert import convert_audio_files, convert_text_data
-from evaluate import remove_correct
-
+from evaluate import remove_correct, evaluate_SER
+from tuning_STT.expand import remove_duplication
 from common.info import open_dialog
 
 
@@ -72,8 +72,10 @@ def STT_pipeline(askFolder=None, model='google', makeTrainData=None, evaluation=
         askFolder = input("폴더를 선택할까요?(Y/N): ").strip().lower() == 'y'
     if askFolder:
         path = open_dialog(True)
+        suffix = path.name.split('_')[1]
     else:
         path = open_dialog(False, filetypes=[("Audio files", "*.m4a *.mp3 *.wav")])
+        suffix = ''
     fileList = convert_audio_files(path, askFolder)  # wav로 변환
     fileList = sorted(fileList, key=natural_sort_key)
 
@@ -93,20 +95,31 @@ def STT_pipeline(askFolder=None, model='google', makeTrainData=None, evaluation=
     if makeTrainData and len(fileList) != 0:
         jsonl = input("jsonl데이터로 만들까요?(Y/N): ").strip().lower() == 'y'
         excelPath = open_dialog(False)
-        convert_text_data(fileList, convert_result, jsonl, excelPath)
+        outputPath = convert_text_data(fileList, convert_result, jsonl, excelPath, suffix)
     else:
-        convert_text_data(fileList, convert_result, True)
+        outputPath = convert_text_data(fileList, convert_result, True, suffix)
+
+    # 정답 데이터 제거
+    if makeTrainData and evaluation:
+        outputPath = evaluate_SER(outputPath)
+        outputPath = remove_correct(outputPath)
+        remove_duplication(outputPath)
 
     # .wav 파일 삭제
     for file in fileList:
         if file.suffix == '.wav':
             try:
                 os.remove(file)
-                print(f"{file} 파일을 삭제했습니다.")
             except Exception as e:
                 print(f"{file} 파일을 삭제하는 중 오류가 발생했습니다: {e}")
+    print(f"변환된 파일을 삭제했습니다.")
 
-    # 정답 데이터 제거
-    if makeTrainData and evaluation:
-        remove_correct()
+
     print("완료.")
+
+
+if __name__ == '__main__':
+    outputPath = open_dialog(False)
+    p = evaluate_SER(outputPath)
+    p = remove_correct(p)
+    remove_duplication(p)

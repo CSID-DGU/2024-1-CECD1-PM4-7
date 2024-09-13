@@ -8,18 +8,19 @@ from common.info import open_dialog
 
 
 # 중복된 데이터 제거
-def remove_duplication():
-    path = open_dialog(False)
+def remove_duplication(filePath=None) -> Path:
+    if filePath is None:
+        filePath = open_dialog(False)
     try:
         filetype = "csv"
-        df = pd.read_csv(path, encoding='utf-8')
+        df = pd.read_csv(filePath, encoding='utf-8')
     except:
         filetype = "xlsx"
-        df = pd.read_excel(path)
+        df = pd.read_excel(filePath)
 
-    # 1. 모든 행의 User 입력 통일
-    first_column_first_value = df.iloc[0, 0]
-    df.iloc[1:, 0] = first_column_first_value
+    # # 1. 모든 행의 User 입력 통일
+    # first_column_first_value = df.iloc[0, 0]
+    # df.iloc[1:, 0] = first_column_first_value
 
     original_row_count = len(df)
 
@@ -34,17 +35,15 @@ def remove_duplication():
     final_row_count = len(df)
 
     # 4. 저장
-    new_file_name = path.stem + "_cleaned"
-    new_file_path = path.with_name(new_file_name).with_suffix(f'.{filetype}')
+    new_file_path = filePath.with_name(f"{filePath.stem}_cleaned{filePath.suffix}")
     
     if filetype == "csv":
         df.to_csv(new_file_path, index=False, encoding='utf-8-sig')
     else:
         df.to_excel(new_file_path, index=False)
+    print(f"중복 데이터 {original_row_count - final_row_count}개 제거 완료")
 
-    print(f"{new_file_path}에 파일 저장 완료")
-    print(f"{original_row_count - final_row_count}개 데이터 삭제됨")
-
+    return new_file_path
 
 # 학습 데이터 생성 - 형식 맞추기
 def postprocess():
