@@ -1,6 +1,32 @@
 import json
 import os
+from pathlib import Path
+
 import pandas as pd
+
+from common.info import open_dialog
+
+
+def merge_json(filename: str):
+    file_amount = int(input("합치려는 파일 수: "))
+
+    result = []
+    for i in range(file_amount):
+        filePath = open_dialog(False)  # False: 파일 열기
+        with filePath.open('r', encoding='utf-8-sig') as f:
+            data = json.load(f)
+            # 각각의 JSON 데이터를 리스트에 추가
+            if isinstance(data, list):
+                result.extend(data)
+            else:
+                result.append(data)
+    
+    folderPath = open_dialog(True)  # True: 폴더 선택
+    filePath = folderPath / f'{filename}.json'
+    
+    with open(filePath, 'w', encoding='utf-8-sig') as f:
+        json.dump(result, f, ensure_ascii=False, indent=4)
+
 
 def merge_excel_files(directory, output_file, file_pattern, start, end):
     combined_df = pd.DataFrame()
@@ -28,10 +54,6 @@ def merge_jsonl_files(directory, output_file, file_pattern, start, end):
             else:
                 print(f"File {input_file} does not exist and will be skipped.")
 
-merge_excel_files('abs path', 'merged_output.xlsx', 'test{}.xlsx', 0, 5)
 
-merge_jsonl_files('abs path', 'merged_output.jsonl', 'test{}.jsonl', 0, 5)
-
-
-
-                
+if __name__ == '__main__':
+    merge_json('stt_train')
