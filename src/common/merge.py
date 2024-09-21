@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from tuning_STT.expand import remove_duplication
 from common.info import open_dialog
+from tuning_STT.expand import remove_duplication
 
 
 def merge_json(filename: str):

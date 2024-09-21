@@ -2,7 +2,7 @@ import os
 import pprint
 import re
 import wave
-import pandas as pd
+
 # from CLOVA_STT import stt_clova
 import google.cloud.speech_v1p1beta1 as speech
 import google.cloud.storage as storage
@@ -10,7 +10,7 @@ from convert import convert_audio_files, convert_text_data
 from evaluate import remove_correct, evaluate_SER
 from tuning_STT.expand import remove_duplication
 from common.info import open_dialog
-
+import sys
 
 # STT
 def transcribe_audio(file_path):
@@ -72,7 +72,11 @@ def STT_pipeline(askFolder=None, model='google', makeTrainData=None, evaluation=
         askFolder = input("폴더를 선택할까요?(Y/N): ").strip().lower() == 'y'
     if askFolder:
         path = open_dialog(True)
-        suffix = path.name.split('_')[1]
+        try:
+            suffix = path.name.split('_')[1]
+        except:
+            print("폴더 경로 오류.")
+            sys.exit()
     else:
         path = open_dialog(False, filetypes=[("Audio files", "*.m4a *.mp3 *.wav")])
         suffix = ''
