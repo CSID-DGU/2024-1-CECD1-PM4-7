@@ -1,6 +1,5 @@
 // 서버 실행 및 라우팅 작업 수행
 require("dotenv").config(); // .env 파일에서 환경 변수 로드
-const {addUser} = require("./addUser");
 const {callUser} = require("./callUser");
 const {getGPTResponse, removeConversations} = require("./gpt");
 const {downloadRecording, transcribeAudio} = require("./stt");
@@ -11,20 +10,11 @@ const VoiceResponse = twilio.twiml.VoiceResponse;
 
 const app = express();
 
-// 빌드용 주석
-
 app.use(express.json()); // JSON 자동 파싱
 app.use(express.urlencoded({extended: true})); // URL 자동 파싱
 
 const userStates = {}; // 각 사용자의 상태를 저장하는 객체
 let isFirstCalling = true; // 중복 전화 방지 플래그
-
-// 파이어스토어에 사용자 정보 저장
-app.post("/addUser", async (req, res) => {
-  const {name, phoneNumber, crisisTypes} = req.body;
-  await addUser(name, phoneNumber, crisisTypes);
-  res.status(200).send("사용자 정보가 성공적으로 저장됨");
-});
 
 // 사용자에게 전화를 걸음
 app.get("/call", async (req, res) => {
@@ -55,7 +45,7 @@ app.post("/voice", async (req, res) => {
       isProcessing: false,
     };
   }
-  userStates[clientId].isProcessing = false; // 리다이렉트했을 때 음성 처리 중 플래그 초기화
+  userStates[clientId].isProcessing = false; // 리다이렉트했을 때 음성 처리 중 플래그 >초기화
   console.log("userStates: ", userStates);
 
   try {
@@ -122,7 +112,7 @@ app.post("/recording-complete", async (req, res) => {
       // 녹음 파일이 다운로드 가능한 경우에만 파일 처리
       if (status === 200) {
         console.log(`녹음 파일 다운로드 성공 - HTTP 상태 코드: ${status}`);
-        clearInterval(checkRecordingInterval); // 파일이 성공적으로 다운로드되면 반복 중지
+        clearInterval(checkRecordingInterval); // 파일이 성공적으로 다운로드되면 반복 >중지
 
         // Google STT를 사용해 녹음 파일을 전사
         const transcription = await transcribeAudio(recordingData);
@@ -170,4 +160,8 @@ app.post("/call-completed", (req, res) => {
   res.sendStatus(200);
 });
 
-module.exports = app;
+// 서버를 3000번 포트에서 실행
+const PORT = 80;
+app.listen(PORT, ()=> {
+  console.log(`Server is running on port ${PORT}`);
+});
