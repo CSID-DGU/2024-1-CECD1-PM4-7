@@ -34,10 +34,10 @@ async function callUser() {
 
       // Twilio API를 사용해 전화를 걸음
       await client.calls.create({
-        url: `http://3.36.124.130/voice?message=${encodeURIComponent(message)}&gptRequest=${encodeURIComponent(gptRequest)}`,
+        url: `http://13.125.79.179/voice?message=${encodeURIComponent(message)}&gptRequest=${encodeURIComponent(gptRequest)}`,
         to: userPhoneNumber,
         from: '+12566699723',
-        statusCallback: 'http://3.36.124.130/call-completed',
+        statusCallback: 'http://13.125.79.179/call-completed',
         statusCallbackEvent: ['completed'],
       });
     }
