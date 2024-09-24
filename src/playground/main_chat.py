@@ -10,6 +10,7 @@ KEY = getKey('STT')
 MODEL = 'gpt-4o-mini'
 NAME = "홍길동"
 EMERGENCY = ["요금체납", "주거위기", "고용위기", "급여/서비스 탈락", "긴급상황 위기", "건강위기", "에너지위기"]
+END_SIGNAL = "종료하겠습니다"
 
 client = OpenAI(api_key=KEY)
 
@@ -36,16 +37,19 @@ print(f"You: {first_ment}")
 print("Assistant: ", send_request(client, conversation_history, first_ment, MODEL))
 while True:
     user_input = input("You: ")
-    if user_input.lower() == '':  # 종료
-        apply = input('대화를 클라우드에 기록할까요?(ㅇ/ㄴ)')
-        if apply == 'ㅇ':
-            names = ["", "jh", "jm", "sp", "sy"]
-            name = int(input("자신에 해당하는 번호 입력\n1.김준혁 2.김제민 3.박상은 4.성시윤\n--> "))
-            gb = int(input("Good: 1번, Bad: 2번 입력\n--> "))
+    gpt_output = send_request(client, conversation_history, user_input, MODEL)
+    print("Assistant:", gpt_output)
 
-            sheetname = names[name] + ("_Good" if gb == 1 else "_Bad")
-            applyChat("Chat model", sheetname, conversation_history)
-            applyChat("Chat model(Backup)", sheetname, conversation_history)
-            # makeAssistFile(PROMPT, conversation_history)
+    if END_SIGNAL in gpt_output:
         break
-    print("Assistant:", send_request(client, conversation_history, user_input, MODEL))
+
+apply = input('\n대화를 클라우드에 기록할까요?(ㅇ/ㄴ)')
+if apply == 'ㅇ':
+    names = ["", "jh", "jm", "sp", "sy"]
+    name = int(input("자신에 해당하는 번호 입력\n1.김준혁 2.김제민 3.박상은 4.성시윤\n--> "))
+    gb = int(input("Good: 1번, Bad: 2번 입력\n--> "))
+
+    sheetname = names[name] + ("_Good" if gb == 1 else "_Bad")
+    applyChat("Chat model", sheetname, conversation_history)
+    applyChat("Chat model(Backup)", sheetname, conversation_history)
+    # makeAssistFile(PROMPT, conversation_history)
