@@ -37,6 +37,8 @@ print(f"You: {first_ment}")
 print("Assistant: ", send_request(client, conversation_history, first_ment, MODEL))
 while True:
     user_input = input("You: ")
+    if user_input == '':
+        break
     gpt_output = send_request(client, conversation_history, user_input, MODEL)
     print("Assistant:", gpt_output)
 
