@@ -47,9 +47,9 @@ apply = input('\n대화를 클라우드에 기록할까요?(ㅇ/ㄴ)')
 if apply == 'ㅇ':
     names = ["", "jh", "jm", "sp", "sy"]
     name = int(input("자신에 해당하는 번호 입력\n1.김준혁 2.김제민 3.박상은 4.성시윤\n--> "))
-    gb = int(input("Good: 1번, Bad: 2번 입력\n--> "))
+    # gb = int(input("Good: 1번, Bad: 2번 입력\n--> "))
 
-    sheetname = names[name] + ("_Good" if gb == 1 else "_Bad")
+    sheetname = names[name]  # + ("_Good" if gb == 1 else "_Bad")
     applyChat("Chat model", sheetname, conversation_history)
     applyChat("Chat model(Backup)", sheetname, conversation_history)
     # makeAssistFile(PROMPT, conversation_history)
