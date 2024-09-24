@@ -5,6 +5,7 @@ from pathlib import Path
 import pandas as pd
 
 from common.info import open_dialog
+from tuning_STT.expand import remove_duplication
 
 
 def merge_json(filename: str):
@@ -28,19 +29,35 @@ def merge_json(filename: str):
         json.dump(result, f, ensure_ascii=False, indent=4)
 
 
-def merge_excel_files(directory, output_file, file_pattern, start, end):
-    combined_df = pd.DataFrame()
+def merge_excel_files(sort=True) -> Path:
+    fileList = []
+    
+    # 파일 선택 및 추가
+    while True:
+        filepath = open_dialog(False)
+        if filepath.suffix != '.xlsx':
+            break
+        fileList.append(filepath)
+    
+    merged_df = pd.DataFrame()
+    for file in fileList:
+        df = pd.read_excel(file)
+        merged_df = pd.concat([merged_df, df], ignore_index=True)
+    
+    # 정렬 여부
+    if sort:
+        merged_df = merged_df.sort_values(by=merged_df.columns.tolist())
+    
+    # 저장 파일 경로 설정
+    common_prefix = os.path.commonprefix([os.path.basename(file) for file in fileList])
+    output_filename = fileList[0].parent / f"{common_prefix}_merged.xlsx"
+    
+    # 파일 저장
+    merged_df.to_excel(output_filename, index=False)
+    
+    print(f"병합된 파일이 {output_filename}로 저장되었습니다.")
+    return output_filename
 
-    for i in range(start, end + 1):
-        input_file = os.path.join(directory, file_pattern.format(i))
-        if os.path.exists(input_file):
-            df = pd.read_excel(input_file)
-            combined_df = pd.concat([combined_df, df], ignore_index=True)
-        else:
-            print(f"File {input_file} does not exist and will be skipped.")
-
-    output_path = os.path.join(directory, output_file)
-    combined_df.to_excel(output_path, index=False)
 
 def merge_jsonl_files(directory, output_file, file_pattern, start, end):
     output_path = os.path.join(directory, output_file)
@@ -56,4 +73,6 @@ def merge_jsonl_files(directory, output_file, file_pattern, start, end):
 
 
 if __name__ == '__main__':
-    merge_json('stt_train')
+    # merge_json('stt_train')
+    fp = merge_excel_files(True)
+    remove_duplication(fp)

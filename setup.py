@@ -10,7 +10,8 @@ setup(
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
     install_requires=[
-        'pandas>=1.3.5',
+        'numpy==1.26.4',
+        'pandas==1.3.5',
         'openpyxl>=3.1.5',
         'requests>=2.31.0',
         'google-cloud-speech>=2.26.0',
@@ -25,6 +26,7 @@ setup(
         'ffmpeg-python>=0.2.0',
         'konlpy>=0.6.0',
         'jamo>=0.4.1',
+        'beautifulsoup4==4.12.3',
     ],
     data_files=[
         ('key', key_files),

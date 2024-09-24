@@ -1,6 +1,7 @@
 # STT main
-from common import auth_
 import STT
+
+from common import auth_
 
 # Auth
 auth_.googleAuth()
