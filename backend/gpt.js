@@ -8,12 +8,17 @@ const openai = new OpenAI({
 // JSON 파일에서 프롬프트 가져오기
 const fs = require("fs");
 const path = require("path");
-const promptPath = path.resolve(__dirname, "./prompt/prompt.json");
+const promptPath = path.resolve(__dirname, "../key/prompt.json");
 const promptData = JSON.parse(fs.readFileSync(promptPath, "utf-8"));
 const chatPrompt = promptData.playground_chat;
 
 // 각 클라이언트의 대화 기록
-const conversations = {};
+let conversations = [
+  {
+    role: "system",
+    content: chatPrompt,
+  },
+];
 
 /**
  * STT로 전사된 텍스트를 GPT API에 전달하고 응답을 처리하는 함수
@@ -21,19 +26,9 @@ const conversations = {};
  * @param {string} gptRequest - GPT에 전달할 요청 텍스트
  * @return {Promise<string>} GPT의 응답 텍스트
  */
-async function getGPTResponse(clientId, gptRequest) {
-  // 해당 클라이언트의 대화 기록이 없다면 초기화
-  if (!conversations[clientId]) {
-    conversations[clientId] = [
-      {
-        role: "system",
-        content: chatPrompt,
-      },
-    ];
-  }
-
+async function getGPTResponse(gptRequest) {
   // 사용자의 요청을 대화 기록에 추가
-  conversations[clientId].push({
+  conversations.push({
     role: "user",
     content: gptRequest,
   });
@@ -41,7 +36,7 @@ async function getGPTResponse(clientId, gptRequest) {
   // 대화 기록을 기반으로 GPT API에 응답을 요청
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
-    messages: conversations[clientId],
+    messages: conversations,
     temperature: 0.0,
     max_tokens: 256,
     top_p: 0.0,
@@ -54,22 +49,12 @@ async function getGPTResponse(clientId, gptRequest) {
   const gptContent = gptResponse.content;
 
   // GPT의 응답을 대화 기록에 추가
-  conversations[clientId].push({
+  conversations.push({
     role: "assistant",
     content: gptContent,
   });
 
-  console.log(conversations[clientId]);
   return gptContent;
 }
 
-/**
- * 진행된 GPT 대화 기록을 삭제하는 함수
- * @param {string} clientId - 클라이언트 식별 ID
- * @return {Promise<void>}
- */
-async function removeConversations(clientId) {
-  delete conversations[clientId];
-}
-
-module.exports = {getGPTResponse, removeConversations};
+module.exports = {getGPTResponse};
