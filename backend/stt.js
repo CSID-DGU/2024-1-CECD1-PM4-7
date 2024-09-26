@@ -27,8 +27,8 @@ async function streamSTT(audioBuffer, onTranscription) {
       console.error('Google STT Error: ', err);
     })
     .on('data', (data) => {
+      // VAD가 자동으로 음성 종를 감지했을 때 결과 전송
       if (data.results[0] && data.results[0].isFinal) {
-        // VAD가 자동으로 음성 종를 감지했을 때 결과 전송
         const transcription = data.results[0].alternatives[0].transcript;
         onTranscription(transcription);
       }
@@ -36,7 +36,7 @@ async function streamSTT(audioBuffer, onTranscription) {
 
     // 실시간 음성 데이터를 Google STT로 스트리밍
     recognizeStream.write(audioBuffer);
-    recognizeStream.end(); // 데이터를 모두 보냈다는 신호
+    recognizeStream.end();
 }
 
 module.exports = {streamSTT};

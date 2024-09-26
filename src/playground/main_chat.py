@@ -7,7 +7,7 @@ from client import send_request
 
 PROMPT = common.info.getPrompt("playground_chat")
 KEY = getKey('STT')
-MODEL = 'gpt-4o-mini'
+MODEL = 'chatgpt-4o-latest'
 NAME = "홍길동"
 EMERGENCY = ["요금체납", "주거위기", "고용위기", "급여/서비스 탈락", "긴급상황 위기", "건강위기", "에너지위기"]
 END_SIGNAL = "종료하겠습니다"
