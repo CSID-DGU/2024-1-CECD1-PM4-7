@@ -1,3 +1,5 @@
+# git clone https://github.com/ssut/py-hanspell.git
+# pip install -e.
 import requests
 from bs4 import BeautifulSoup
 from common.info import open_dialog
@@ -5,6 +7,7 @@ import pandas as pd
 from konlpy.tag import Kkma, Okt
 from pathlib import Path
 import re
+from hanspell.spell_checker import check
 
 def test():
     kkma = Kkma()
@@ -14,6 +17,10 @@ def test():
     print(kkma.pos(sent, flatten=False))
     print(kkma.pos(sent, flatten=True))
     getPronunciation(sentences[0])
+
+def checktest():
+    result = check("나는사과를좋아해")
+    print(type(result))
 
 
 # GET request를 통해 발음 데이터를 가져오는 함수
@@ -91,45 +98,46 @@ def append_data(orig: list, pron: list, rule: list, ele: dict):
     rule.append(ele['rule'])
 
 
-if __name__ == '__main__':
-    kkma = Kkma()
-    fp = open_dialog(False)
-    data = pd.read_excel(fp).drop_duplicates(subset=['User content'])
-
-    orig = []
-    pron = []
-    rule = []
-    # 1. data각 문장에 대해 단어 분리(라이브러리 사용)
-    # 2. getPronunciation()을 통해 발음 저장
-    for sentence in data['User content']:
-        sent = kkma.sentences(sentence.replace(' ', ''))[0]
-        result = getPronunciation(sent)
-        # 문장 전체의 발음검사가 불가능한 경우 띄어쓰기로 분리하여 진행
-        if len(result) == 1:
-            words = sent.split()
-            for word in words:
-                result = getPronunciation(word)
-                for ele in result:
-                    # # 띄어쓰기로 분리했지만 발음이 나오지 않은경우
-                    # if ele['pron'] == '':
-                    #     elements = kkma.sentences(ele['orig'])
-                    #     for element in elements:
-                    #         result_2nd = getPronunciation(element)
-                    #         for e in result_2nd:
-                    #             append_data(orig, pron, rule, e)
-                    # else:
-                    #     for e in ele:
-                    #         append_data(orig, pron, rule, e)
-                    append_data(orig, pron, rule, ele)
-        else:
-            for ele in result:
-                append_data(orig, pron, rule, ele)
-
-
-        orig.append('---')
-        pron.append('---')
-        rule.append('---')
-
-    # 3. 엑셀로 저장
-    df = pd.DataFrame({'orig': orig, 'pron': pron, 'rule': rule})
-    df.to_excel(fp.with_stem(fp.stem + '_pronunciation'), index=False)
+checktest()
+# if __name__ == '__main__':
+#     kkma = Kkma()
+#     fp = open_dialog(False)
+#     data = pd.read_excel(fp).drop_duplicates(subset=['User content'])
+#
+#     orig = []
+#     pron = []
+#     rule = []
+#     # 1. data각 문장에 대해 단어 분리(라이브러리 사용)
+#     # 2. getPronunciation()을 통해 발음 저장
+#     for sentence in data['User content']:
+#         sent = kkma.sentences(sentence.replace(' ', ''))[0]
+#         result = getPronunciation(sent)
+#         # 문장 전체의 발음검사가 불가능한 경우 띄어쓰기로 분리하여 진행
+#         if len(result) == 1:
+#             words = sent.split()
+#             for word in words:
+#                 result = getPronunciation(word)
+#                 for ele in result:
+#                     # # 띄어쓰기로 분리했지만 발음이 나오지 않은경우
+#                     # if ele['pron'] == '':
+#                     #     elements = kkma.sentences(ele['orig'])
+#                     #     for element in elements:
+#                     #         result_2nd = getPronunciation(element)
+#                     #         for e in result_2nd:
+#                     #             append_data(orig, pron, rule, e)
+#                     # else:
+#                     #     for e in ele:
+#                     #         append_data(orig, pron, rule, e)
+#                     append_data(orig, pron, rule, ele)
+#         else:
+#             for ele in result:
+#                 append_data(orig, pron, rule, ele)
+#
+#
+#         orig.append('---')
+#         pron.append('---')
+#         rule.append('---')
+#
+#     # 3. 엑셀로 저장
+#     df = pd.DataFrame({'orig': orig, 'pron': pron, 'rule': rule})
+#     df.to_excel(fp.with_stem(fp.stem + '_pronunciation'), index=False)
