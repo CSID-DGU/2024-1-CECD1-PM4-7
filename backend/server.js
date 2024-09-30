@@ -2,13 +2,27 @@
 require("dotenv").config(); // 환경 변수 로드
 const {callUser} = require("./callUser");
 const {getGPTResponse} = require("./gpt");
-const {streamSTT} = require("./stt");
 const {streamTTS} = require("./tts");
 const https = require('https');
 const fs = require('fs');
 const express = require("express");
 const WebSocket = require('ws');
 const twilio = require("twilio");
+
+// 구글 STT로 음성을 텍스트로 변환
+const {SpeechClient} = require("@google-cloud/speech");
+const client = new SpeechClient({
+  keyFilename: process.env.GOOGLE_APPICATION_CREDENTIALS,
+});
+
+const request = {
+  config: {
+    encoding: "MULAW",
+    sampleRateHertz: 8000,
+    languageCode: "ko-KR",
+  },
+  interimResults: true
+};
 
 const app = express();
 const VoiceResponse = twilio.twiml.VoiceResponse;
@@ -84,24 +98,55 @@ app.post("/voice", async (req, res) => {
 
 // WebSocket 연결
 wss.on('connection', (ws) => {
-  console.log("WebSocket 연결 성공");
-  ws.on('message', (audioData) => {
-    // 실시간 STT 처리
-    streamSTT(audioData, async (transcription) => {
-      console.log("STT 결과: ", transcription);
+  console.log("\nWebSocket 연결 성공");
+  let recognizeStream = null;
 
-      // STT 결과를 GPT에 전달
-      const gptResponse = await getGPTResponse(transcription);
-      console.log("GPT 결과: ", gptResponse);
+  ws.on('message', message => {
+    const msg = JSON.parse(message);
 
-      // GPT 응답을 TTS로 변환
-      const ttsAudio = await streamTTS(gptResponse);
+    switch (msg.event) {
+      case "connected":
+        console.log("\n미디어 스트림 연결됨");
+        // console.log(msg);
 
-      // Twlio에 TTS 음성 데이터 전송
-      ws.send(ttsAudio);
-      console.log("음성 데이터 전송 완료.");
-    });
+        //실시간 음성 처리 기능
+        recognizeStream = client
+          .streamingRecognize(request)
+          .on('error', console.error)
+          .on('data', data => {
+            const transcript = data.results[0].alternatives[0].transcript;
+            console.log("STT 전사 결과: ", transcript); 
+          });
+        break;
+
+      case "start":
+        console.log("\n미디어 스트림 시작\n");
+        // console.log(msg);        
+        break;
+
+      case "media":
+        // console.log("\n오디오 데이터 전달");
+        // console.log(msg);
+        recognizeStream.write(msg.media.payload);
+        break;
+      case "stop":
+        console.log("\n전화 종료");
+        // console.log(msg);
+        recognizeStream.destroy();
+        break;
+    }
   });
+
+    // STT 결과를 GPT에 전달
+    // const gptResponse = await getGPTResponse(transcription);
+    // console.log("GPT 결과: ", gptResponse);
+
+    // GPT 응답을 TTS로 변환
+    // const ttsAudio = await streamTTS(gptResponse);
+
+    // Twilio에 TTS 음성 데이터 전송
+    // ws.send(ttsAudio);
+    // console.log("음성 데이터 전송 완료.");
 
   // 연결 종료 처리
   ws.on('close', () => {
