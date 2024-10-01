@@ -54,4 +54,4 @@ if apply == 'ㅇ':
     sheetname = names[name]  # + ("_Good" if gb == 1 else "_Bad")
     applyChat("Chat model", sheetname, conversation_history)
     applyChat("Chat model(Backup)", sheetname, conversation_history)
-    # makeAssistFile(PROMPT, conversation_history)우
+    # makeAssistFile(PROMPT, conversation_history)
