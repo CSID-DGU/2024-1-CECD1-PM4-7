@@ -1,32 +1,61 @@
 // 구글 TTS로 텍스트를 음성으로 변환
 const {TextToSpeechClient} = require('@google-cloud/text-to-speech');
-const {Writable} = require('stream');
+const {PassThrough} = require('stream');
 const client = new TextToSpeechClient({
   keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
 });
 
+async function sendTTSResponse(ws, streamSid, gptResponse){
+  const speechStream = await synthesizeSpeechToStream(gptResponse);
+
+  speechStream.on('data', chunk => {
+    const payloadWithoutHeader = removeHeaderBytes(chunk);
+    const base64Payload = payloadWithoutHeader.toString('base64');
+    // const base64Payload = chunk.toString('base64');
+    console.log("Base64 인코딩된 데이터:", base64Payload.slice(0, 100));
+    ws.send(
+      JSON.stringify({
+        event: 'media',
+        streamSid: streamSid,
+        media: {
+          payload: base64Payload,
+        }
+      })
+    );
+  });
+
+  speechStream.on('error', console.error);
+
+  speechStream.on('end', () => {
+    console.log("TTS 스트림 종료");
+  });
+}
+
 /**
  * GPT로부터 받은 텍스트를 음성으로 변환하고, 음성 데이터를 스트림으로 전송하는 함수
- * @param {string} text - 변환할 텍스트
- * @param {function} onAudioData - 생성된 음성 데이터를 처리하는 콜백 함수
- */
-async function streamTTS(text, onAudioData) {
+ * @param {string} gptResponse - 변환할 텍스트
+*/
+async function synthesizeSpeechToStream(gptResponse) {
   const request = {
-    input: { text: text },
+    input: { text: gptResponse },
     voice: { languageCode: 'ko-KR', ssmlGender: 'NEUTRAL' },
-    audioConfig: { audioEncoding: 'LINEAR16' },
+    audioConfig: { 
+      audioEncoding: 'MULAW',
+      sampleRateHertz: 8000,
+     },
   };
 
   const [response] = await client.synthesizeSpeech(request);
 
-  const audioStream = new Writable({
-    write(chunk, encoding, callback) {
-      onAudioData(chunk);
-      callback();
-    },
-  });
+  const speechStream = new PassThrough();
+  speechStream.end(response.audioContent);
 
-  audioStream.end(response.audioContent);
+  return speechStream;
 }
 
-module.exports = { streamTTS };
+function removeHeaderBytes(chunk) {
+  const headerSize = 62;
+  return chunk.slice(headerSize);
+}
+
+module.exports = {sendTTSResponse};
