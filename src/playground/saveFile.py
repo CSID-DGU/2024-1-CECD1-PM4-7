@@ -1,4 +1,7 @@
 # Assist content생성
+import random
+import time
+
 import pandas as pd
 from pathlib import Path
 from tuning.convert import chat_xlsx_to_jsonl
@@ -6,6 +9,7 @@ from common.auth_ import googleAuth
 import os
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+from gspread.exceptions import APIError
 
 project_dir = Path(__file__).resolve().parent.parent.parent
 public_folder = project_dir / 'public'
@@ -51,17 +55,30 @@ def applyChat(filename: str, sheetname: str, conversation_history: list):
     # 스프레드시트 열기
     spreadsheet = client.open(filename)
 
-    try:
-        worksheet = spreadsheet.worksheet(sheetname)
-    except gspread.exceptions.WorksheetNotFound:
-        worksheet = spreadsheet.add_worksheet(title=sheetname, rows=100, cols=20)
+    # 다시 시도 설정
+    max_retries = 5
 
-    # 데이터 형식 수정
-    res = []
-    for line in conversation_history:
-        res.append(line['content'])
+    for i in range(max_retries):
+        try:
+            try:
+                worksheet = spreadsheet.worksheet(sheetname)
+            except gspread.exceptions.WorksheetNotFound:
+                worksheet = spreadsheet.add_worksheet(title=sheetname, rows=100, cols=20)
 
-    # 반영
-    worksheet.append_row(res)
+            # 데이터 형식 수정
+            res = []
+            for line in conversation_history:
+                res.append(line['content'])
 
-    print(f"파일 {filename}에 데이터 추가 완료.")
+            # 반영
+            worksheet.append_row(res)
+            print(f"파일 {filename}에 데이터 추가 완료.")
+            break  # 성공하면 반복 종료
+
+        except APIError as e:
+            wait_time = (2 ** i) + random.uniform(0, 1)  # 지수적 백오프
+            print(f"오류 발생: {e}. {wait_time:.2f}초 후 다시 시도합니다.")
+            time.sleep(wait_time)
+
+            if i == max_retries - 1:
+                print(f"최대 재시도 횟수 {max_retries}회 도달. 작업 실패.")
