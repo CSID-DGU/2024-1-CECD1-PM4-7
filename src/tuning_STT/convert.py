@@ -42,6 +42,31 @@ def stt_correction_trainData_OpenAI():
             f.write(item + '\n')
 
 
+def stt_correction_trainData_OpenAI2():
+    # DataFrame
+    filepath = open_dialog(False)
+    df = pd.read_excel(filepath)
+
+    json_list = []
+    for index, row in df.iterrows():
+        PROMPT = f"다음은 STT를 이용하여 음성을 텍스트로 전사한 결과와 오류율이다. 이를 올바르게 수정하라. 오류율은 {row['SER(User-STT)']*100}%이다."
+        user_content = row["STT Result"]
+        assistant_content = row["User content"]
+        message = {
+            "messages": [
+                {"role": "system", "content": PROMPT},
+                {"role": "user", "content": user_content},
+                {"role": "assistant", "content": assistant_content}
+            ]
+        }
+        json_list.append(json.dumps(message, ensure_ascii=False))
+
+    output_file_path = filepath.with_name('trainData').with_suffix('.jsonl')
+
+    with output_file_path.open('w', encoding='utf-8') as f:
+        for item in json_list:
+            f.write(item + '\n')
+
 # STT 교정모델 학습 데이터 생성 함수(.xlsx -> .jsonl)
 # LLaMA 모델용
 def stt_correction_trainData_LLaMA():
@@ -78,4 +103,4 @@ def stt_correction_trainData_LLaMA():
 
         
 if __name__ == '__main__':
-    stt_correction_trainData_LLaMA()
+    stt_correction_trainData_OpenAI2()
