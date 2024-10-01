@@ -25,7 +25,7 @@ conversation_history = [
 # 위기유형 랜덤화
 # 85%의 확률로 3개, 5%의 확률로 1/2/4개
 numbers = [1, 2, 3, 3, 3, 3, 3, 3, 3, 4]
-EMERGENCY_COUNT = random.sample(numbers, 1)[0]
+EMERGENCY_COUNT = random.sample(numbers, 1)[0]  
 EMERGENCY_LIST = random.sample(EMERGENCY, EMERGENCY_COUNT)
 
 # 초기 입력

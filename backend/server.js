@@ -2,13 +2,27 @@
 require("dotenv").config(); // 환경 변수 로드
 const {callUser} = require("./callUser");
 const {getGPTResponse} = require("./gpt");
-const {streamSTT} = require("./stt");
-const {streamTTS} = require("./tts");
+const {sendTTSResponse} = require("./tts");
 const https = require('https');
 const fs = require('fs');
 const express = require("express");
 const WebSocket = require('ws');
 const twilio = require("twilio");
+
+// 구글 STT로 음성을 텍스트로 변환
+const {SpeechClient} = require("@google-cloud/speech");
+const client = new SpeechClient({
+  keyFilename: process.env.GOOGLE_APPICATION_CREDENTIALS,
+});
+
+const request = {
+  config: {
+    encoding: "MULAW",
+    sampleRateHertz: 8000,
+    languageCode: "ko-KR",
+  },
+  interimResults: true  // 중간 결과 반환
+};
 
 const app = express();
 const VoiceResponse = twilio.twiml.VoiceResponse;
@@ -84,23 +98,65 @@ app.post("/voice", async (req, res) => {
 
 // WebSocket 연결
 wss.on('connection', (ws) => {
-  console.log("WebSocket 연결 성공");
-  ws.on('message', (audioData) => {
-    // 실시간 STT 처리
-    streamSTT(audioData, async (transcription) => {
-      console.log("STT 결과: ", transcription);
+  console.log("\nWebSocket 연결 성공");
+  let recognizeStream = null;
+  let timeoutHandle = null;
 
-      // STT 결과를 GPT에 전달
-      const gptResponse = await getGPTResponse(transcription);
-      console.log("GPT 결과: ", gptResponse);
+  ws.on('message', message => {
+    const msg = JSON.parse(message);
 
-      // GPT 응답을 TTS로 변환
-      const ttsAudio = await streamTTS(gptResponse);
+    switch (msg.event) {
+      case "connected":
+        console.log("\n미디어 스트림 연결됨");
+        //console.log(msg);
+        break;
 
-      // Twlio에 TTS 음성 데이터 전송
-      ws.send(ttsAudio);
-      console.log("음성 데이터 전송 완료.");
-    });
+      case "start":
+        console.log("\n미디어 스트림 시작\n");
+        // console.log(msg);
+
+        //실시간 음성 처리 기능
+        recognizeStream = client
+          .streamingRecognize(request)
+          .on('error', console.error)
+          .on('data', data => {
+            const transcription = data.results[0].alternatives[0].transcript;
+            console.log("STT 전사 결과: ", transcription);
+            
+            // 0.3초 이내에 다음 전사된 텍스트를 받으면 타이머 초기화
+            if(timeoutHandle) {
+              clearTimeout(timeoutHandle);
+              console.log("타이머 초기화");
+            }
+
+            // 0.3초 동안 구글 STT로 부터 받은 데이터가 없으면 문장이 끝났다고 판단
+            timeoutHandle = setTimeout(async () => {
+              // 스트리밍 일시 중지
+              recognizeStream.pause();
+              console.log("스트리밍 일시 중지");
+
+              // STT 결과를 GPT에 전달
+              const gptResponse = await getGPTResponse(transcription);
+              console.log("GPT 결과: ", gptResponse);
+              
+              // GPT 응답을 TTS로 변환 
+              await sendTTSResponse(ws, msg.streamSid, gptResponse);
+            }, 300);
+          });        
+        break;
+
+      case "media":
+        // console.log("\n오디오 데이터 전달");
+        // console.log(msg);
+        console.log(msg.media.timestamp);
+        recognizeStream.write(msg.media.payload);
+        break;
+      case "stop":
+        console.log("\n전화 종료");
+        // console.log(msg);
+        recognizeStream.destroy();
+        break;
+    }
   });
 
   // 연결 종료 처리
@@ -108,4 +164,3 @@ wss.on('connection', (ws) => {
     console.log("클라이언트와 연결이 종료되었습니다.");
   });
 });
-
