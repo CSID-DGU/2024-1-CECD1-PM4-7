@@ -113,41 +113,47 @@ wss.on('connection', (ws) => {
 
       case "start":
         console.log("\n미디어 스트림 시작\n");
+        // console.log(msg);        
+        break;
+
+      case "media":
+        // console.log("\n오디오 데이터 전달");
         // console.log(msg);
 
-        //실시간 음성 처리 기능
-        recognizeStream = client
-          .streamingRecognize(request)
-          .on('error', console.error)
-          .on('data', data => {
-            const transcription = data.results[0].alternatives[0].transcript;
-            console.log("STT 전사 결과: ", transcription);
-            
-            // 0.3초 이내에 다음 전사된 텍스트를 받으면 타이머 초기화
-            if(timeoutHandle) {
-              clearTimeout(timeoutHandle);
-              console.log("타이머 초기화");
-            }
+        if(!recognizeStream) {
+          //실시간 음성 처리
+          console.log("새 STT 스트림 생성");
 
-            // 0.3초 동안 구글 STT로 부터 받은 데이터가 없으면 문장이 끝났다고 판단
-            timeoutHandle = setTimeout(async () => {
-              // 스트리밍 일시 중지
+          recognizeStream = client
+            .streamingRecognize(request)
+            .on('error', console.error)
+            .on('data', data => {
+              const transcription = data.results[0].alternatives[0].transcript;
+              console.log("STT 전사 결과: ", transcription);
+              
+              // 0.3초 이내에 다음 전사된 텍스트를 받으면 타이머 초기화
+              if(timeoutHandle) {
+                clearTimeout(timeoutHandle);
+                console.log("타이머 초기화");
+              }
+              
+              // 0.3초 동안 구글 STT로 부터 받은 데이터가 없으면 문장이 끝났다고 판단
+              timeoutHandle = setTimeout(async () => {
               recognizeStream.pause();
               console.log("스트리밍 일시 중지");
 
               // STT 결과를 GPT에 전달
               const gptResponse = await getGPTResponse(transcription);
               console.log("GPT 결과: ", gptResponse);
-              
-              // GPT 응답을 TTS로 변환 
+            
+              // GPT 응답을 TTS로 변환
               await sendTTSResponse(ws, msg.streamSid, gptResponse);
+              recognizeStream.resume();
+              console.log("STT 스트림 삭제 및 타이머 초기화");
             }, 300);
-          });        
-        break;
+          });
+        }
 
-      case "media":
-        // console.log("\n오디오 데이터 전달");
-        // console.log(msg);
         console.log(msg.media.timestamp);
         recognizeStream.write(msg.media.payload);
         break;
