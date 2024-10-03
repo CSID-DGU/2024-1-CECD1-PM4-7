@@ -11,8 +11,7 @@ async function sendTTSResponse(ws, streamSid, gptResponse){
   speechStream.on('data', chunk => {
     const payloadWithoutHeader = removeHeaderBytes(chunk);
     const base64Payload = payloadWithoutHeader.toString('base64');
-    // const base64Payload = chunk.toString('base64');
-    console.log("Base64 인코딩된 데이터:", base64Payload.slice(0, 100));
+    // console.log("Base64 인코딩된 데이터:", base64Payload.slice(0, 100));
     ws.send(
       JSON.stringify({
         event: 'media',
