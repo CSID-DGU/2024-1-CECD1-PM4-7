@@ -1,28 +1,14 @@
 // 서버 실행 및 라우팅 작업 수행
 require("dotenv").config(); // 환경 변수 로드
 const {callUser} = require("./callUser");
-const {getGPTResponse} = require("./gpt");
+const {createRecognizeStream} = require('./stt');
 const {sendTTSResponse} = require("./tts");
+const {getGPTResponse} = require("./gpt");
 const https = require('https');
 const fs = require('fs');
 const express = require("express");
 const WebSocket = require('ws');
 const twilio = require("twilio");
-
-// 구글 STT로 음성을 텍스트로 변환
-const {SpeechClient} = require("@google-cloud/speech");
-const client = new SpeechClient({
-  keyFilename: process.env.GOOGLE_APPICATION_CREDENTIALS,
-});
-
-const request = {
-  config: {
-    encoding: "MULAW",
-    sampleRateHertz: 8000,
-    languageCode: "ko-KR",
-  },
-  interimResults: true  // 중간 결과 반환
-};
 
 const app = express();
 const VoiceResponse = twilio.twiml.VoiceResponse;
@@ -124,8 +110,7 @@ wss.on('connection', (ws) => {
           //실시간 음성 처리
           console.log("새 STT 스트림 생성");
 
-          recognizeStream = client
-            .streamingRecognize(request)
+          recognizeStream = createRecognizeStream()
             .on('error', console.error)
             .on('data', data => {
               const transcription = data.results[0].alternatives[0].transcript;
