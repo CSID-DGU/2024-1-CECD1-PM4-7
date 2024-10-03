@@ -139,34 +139,41 @@ wss.on('connection', (ws) => {
               
               // 0.3초 동안 구글 STT로 부터 받은 데이터가 없으면 문장이 끝났다고 판단
               timeoutHandle = setTimeout(async () => {
-              recognizeStream.pause();
-              console.log("스트리밍 일시 중지");
+              recognizeStream.destroy();
+              console.log("STT 스트림 종료");
 
               // STT 결과를 GPT에 전달
               const gptResponse = await getGPTResponse(transcription);
-              console.log("GPT 결과: ", gptResponse);
+              console.log("\nGPT 결과: ", gptResponse, "\n");
             
               // GPT 응답을 TTS로 변환
               await sendTTSResponse(ws, msg.streamSid, gptResponse);
-              recognizeStream.resume();
-              console.log("STT 스트림 삭제 및 타이머 초기화");
+              recognizeStream = null;
+              console.log("STT 스트림 초기화");
             }, 300);
           });
         }
 
-        console.log(msg.media.timestamp);
-        recognizeStream.write(msg.media.payload);
+        // 스트림이 존재하고 destroy 되지 않았을 때 스트림에 데이터 쓰기
+        if(!recognizeStream.destroyed && recognizeStream) {
+          console.log(msg.media.timestamp);
+          recognizeStream.write(msg.media.payload);
+        } else {
+          console.log("recognizeStream이 종료되어 데이터를 쓸 수 없습니다.")
+        }
         break;
       case "stop":
         console.log("\n전화 종료");
         // console.log(msg);
-        recognizeStream.destroy();
+        if(recognizeStream) {
+          recognizeStream.destroy();
+        }
         break;
     }
   });
 
   // 연결 종료 처리
   ws.on('close', () => {
-    console.log("클라이언트와 연결이 종료되었습니다.");
+      console.log("클라이언트와 연결이 종료되었습니다.");
   });
 });
