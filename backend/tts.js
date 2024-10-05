@@ -53,7 +53,7 @@ async function synthesizeSpeechToStream(gptResponse) {
 }
 
 function removeHeaderBytes(chunk) {
-  const headerSize = 62;
+  const headerSize = 44;  //62
   return chunk.slice(headerSize);
 }
 
