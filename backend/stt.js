@@ -9,6 +9,7 @@ const request = {
     encoding: "MULAW",
     sampleRateHertz: 8000,
     languageCode: "ko-KR",
+    model: "telephony",
   },
   interimResults: true  // 중간 결과 반환
 };

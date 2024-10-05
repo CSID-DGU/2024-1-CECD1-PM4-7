@@ -45,6 +45,8 @@ app.get("/call", async (req, res) => {
     return res.status(429).send("이미 전화가 진행 중입니다.");
   }
 
+  isFirstCalling = false;
+
   try {
     await callUser();
     res.status(200).send("전화가 성공적으로 걸림");
@@ -87,6 +89,7 @@ wss.on('connection', (ws) => {
   console.log("\nWebSocket 연결 성공");
   let recognizeStream = null;
   let timeoutHandle = null;
+  let haslogged = false;
 
   ws.on('message', message => {
     const msg = JSON.parse(message);
@@ -109,10 +112,13 @@ wss.on('connection', (ws) => {
         if(!recognizeStream) {
           //실시간 음성 처리
           console.log("새 STT 스트림 생성");
+          haslogged = false;
 
           recognizeStream = createRecognizeStream()
             .on('error', console.error)
             .on('data', data => {
+              console.log("\n시간: ", msg.media.timestamp);
+              console.log(data.results[0]);
               const transcription = data.results[0].alternatives[0].transcript;
               console.log("STT 전사 결과: ", transcription);
               
@@ -135,16 +141,17 @@ wss.on('connection', (ws) => {
               await sendTTSResponse(ws, msg.streamSid, gptResponse);
               recognizeStream = null;
               console.log("STT 스트림 초기화");
-            }, 300);
+            }, 700);
           });
         }
 
         // 스트림이 존재하고 destroy 되지 않았을 때 스트림에 데이터 쓰기
         if(!recognizeStream.destroyed && recognizeStream) {
-          console.log(msg.media.timestamp);
+          //console.log(msg.media.timestamp);
           recognizeStream.write(msg.media.payload);
-        } else {
-          console.log("recognizeStream이 종료되어 데이터를 쓸 수 없습니다.")
+        } else if (!haslogged){
+          console.log("\nrecognizeStream이 종료되어 데이터를 쓸 수 없습니다.")
+          haslogged = true;
         }
         break;
       case "stop":
@@ -160,5 +167,6 @@ wss.on('connection', (ws) => {
   // 연결 종료 처리
   ws.on('close', () => {
       console.log("클라이언트와 연결이 종료되었습니다.");
+      isFirstCalling = true;
   });
 });
