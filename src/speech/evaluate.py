@@ -72,7 +72,7 @@ def evaluate_SER(filePath=None) -> Path:
     print("SER 계산완료.")
     return newFilePath
 
-# 데이터 교정가능여부 확인
+# 데이터 교정가능여부 확인(모델호출)
 def able_to_correct():
     PROMPT = "제시된 문장은 STT과정에서 오류가 발생한 문장이다. 기존 문장으로 수정하라.\
                 답변은 수정한 문장만을 출력하고, 문장 부호는 생략한다."
@@ -104,26 +104,37 @@ def able_to_correct():
     newFilePath = filePath.with_stem(filePath.stem + "_corrected")
     df.to_excel(newFilePath, index=False)
 
-def evaluate_score():
-    filePath = info.open_dialog(False)
+# 교정 전/후 모델의 SER, COS를 계산
+def evaluate_score(filePath: Path, ser:True, cos:False):
     df = pd.read_excel(filePath)
-    tokenizer_bert, model_bert = load_models()
-    print("모델 로드 완료")
+    if ser:
+        ser1 = []
+        ser2 = []
+    else:
+        ser1 = df["SER(User-STT)"].tolist()
+        ser2 = df["SER(User-COR)"].tolist()
 
-    cos1 = []
-    cos2 = []
-    ser1 = []
-    ser2 = []
+    if cos:
+        tokenizer_bert, model_bert = load_models()
+        print("모델 로드 완료")
+        cos1 = []
+        cos2 = []
+    else:
+        cos1 = df["COS(User-STT)"].tolist()
+        cos2 = df["COS(User-COR)"].tolist()
+
     # SER, COS 계산
     for index, row in df.iterrows():
         orig = row["User content"]
         stt = row["STT Result"]
         cor = row["Corrected"]
-        ser1.append(calculate_ser(orig, stt))
-        ser2.append(calculate_ser(orig, cor))
-        cos1.append(calculate_cos(tokenizer_bert, model_bert, orig, stt))
-        cos2.append(calculate_cos(tokenizer_bert, model_bert, orig, cor))
-        print(f"{index+1} - SER: {ser1[-1]} -> {ser2[-1]}, COS: {cos1[-1]} -> {cos2[-1]}")
+        if ser:
+            ser1.append(calculate_ser(orig, stt))
+            ser2.append(calculate_ser(orig, cor))
+        if cos:
+            cos1.append(calculate_cos(tokenizer_bert, model_bert, orig, stt))
+            cos2.append(calculate_cos(tokenizer_bert, model_bert, orig, cor))
+        print(f"{index+1} - SER: {ser1[index]} -> {ser2[index]}, COS: {cos1[index]} -> {cos2[index]}")
 
     data = {
         "User content": df["User content"],
@@ -137,13 +148,8 @@ def evaluate_score():
     df2 = pd.DataFrame(data)
     df2.to_excel(filePath.with_stem(filePath.stem + "_evaluated"), index=False)
 
-# 평가모델
-def evaluation_model():
-    pass
-
 
 if __name__ == '__main__':
-    fp = info.open_dialog(False)
-    df = pd.read_excel(fp)
-    evaluate_score()
-    able_to_correct()
+    fp = info.open_dialog(False, filetypes=[("Excel Files", "*.xlsx")])
+    evaluate_score(fp, ser=True, cos=True)
+    # able_to_correct()

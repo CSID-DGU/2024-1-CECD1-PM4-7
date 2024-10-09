@@ -56,42 +56,52 @@ def calculate_levenshtein_distance(s1, s2):
     return distances[-1]
 
 # 개선된 SER
-def calculate_weighted_levenshtein(r_lst1, r_lst2, w_cho=1, w_mid=1, w_fin=1):
-    len1, len2 = len(r_lst1), len(r_lst2)
+def calculate_weighted_levenshtein(r_lst1, r_lst2, w_cho=0.4, w_mid=0.4, w_fin=0.2):
+    try:
+        len1, len2 = len(r_lst1), len(r_lst2)
 
-    # Create a distance matrix
-    dp = [[0] * (len2 + 1) for _ in range(len1 + 1)]
+        # Create a distance matrix
+        dp = [[0] * (len2 + 1) for _ in range(len1 + 1)]
 
-    # Initialize base cases
-    for i in range(1, len1 + 1):
-        dp[i][0] = i
-    for j in range(1, len2 + 1):
-        dp[0][j] = j
-
-    # Fill the distance matrix with weighted differences
-    for i in range(1, len1 + 1):
+        # Initialize base cases
+        for i in range(1, len1 + 1):
+            dp[i][0] = i
         for j in range(1, len2 + 1):
-            char1 = r_lst1[i - 1]
-            char2 = r_lst2[j - 1]
+            dp[0][j] = j
 
-            if char1 == char2:
-                dp[i][j] = dp[i - 1][j - 1]  # No change needed
-            else:
-                # Calculate weighted differences for each part (초성, 중성, 종성)
-                cho_diff = 0 if char1[0] == char2[0] else w_cho
-                mid_diff = 0 if char1[1] == char2[1] else w_mid
-                fin_diff = 0 if char1[2] == char2[2] else w_fin
+        # Fill the distance matrix with weighted differences
+        for i in range(1, len1 + 1):
+            for j in range(1, len2 + 1):
+                char1 = r_lst1[i - 1]
+                char2 = r_lst2[j - 1]
 
-                # Total weighted distance for substitution
-                weighted_substitution = cho_diff + mid_diff + fin_diff
+                if len(char1) < 3:
+                    char1 = char1 + [' ', ' ', ' ']
+                if len(char2) < 3:
+                    char2 = char2 + [' ', ' ', ' ']
 
-                dp[i][j] = min(
-                    dp[i - 1][j] + 1,  # Deletion
-                    dp[i][j - 1] + 1,  # Insertion
-                    dp[i - 1][j - 1] + weighted_substitution  # Substitution with weights
-                )
+                if char1 == char2:
+                    dp[i][j] = dp[i - 1][j - 1]  # No change needed
+                else:
+                    # Calculate weighted differences for each part (초성, 중성, 종성)
+                    cho_diff = 0 if char1[0] == char2[0] else w_cho
+                    mid_diff = 0 if char1[1] == char2[1] else w_mid
+                    fin_diff = 0 if char1[2] == char2[2] else w_fin
 
-    return dp[len1][len2]
+                    # Total weighted distance for substitution
+                    weighted_substitution = cho_diff + mid_diff + fin_diff
+
+                    dp[i][j] = min(
+                        dp[i - 1][j] + 1,  # Deletion
+                        dp[i][j - 1] + 1,  # Insertion
+                        dp[i - 1][j - 1] + weighted_substitution  # Substitution with weights
+                    )
+
+        return dp[len1][len2]
+
+    except IndexError as e:
+        print(f"Error occurred with input: r_lst1={r_lst1}, r_lst2={r_lst2}")
+        raise e
 
 # SER 계산
 def calculate_ser(text1: str, text2: str):
@@ -101,7 +111,7 @@ def calculate_ser(text1: str, text2: str):
     levenshtein_distance = calculate_weighted_levenshtein(text1, text2)
     total_syllables = max(len(text1), len(text2))
     ser = levenshtein_distance / total_syllables
-    return round(ser, 3)
+    return round(ser, 5)
 
 # Cosine 유사도(배열로)
 def calculate_cos(tokenizer_bert, model_bert, original_text: str, stt_text: str):
@@ -117,4 +127,4 @@ def calculate_cos(tokenizer_bert, model_bert, original_text: str, stt_text: str)
     similarity = cosine_similarity(embeddings[0], embeddings[1])
 
     # 유사도 값을 반환 (0-dim tensor일 경우 .item()으로 변환)
-    return round(similarity.item(), 3)
+    return round(similarity.item(), 5)
