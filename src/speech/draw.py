@@ -54,7 +54,7 @@ def draw_graph(filePath: Path, list1Name: str, list2Name: str, imageName: str, c
 
     plt.xlabel(imageName + " (STT)")
     plt.ylabel("Average Difference")
-    plt.title(f"{imageName} Average Difference")
+    plt.title(f"{imageName} Average Difference_{'only Correct' if correct else 'All'}")
     plt.legend()
 
 

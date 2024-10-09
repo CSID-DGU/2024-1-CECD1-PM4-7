@@ -76,7 +76,7 @@ def evaluate_SER(filePath=None) -> Path:
 def able_to_correct():
     PROMPT = "제시된 문장은 STT과정에서 오류가 발생한 문장이다. 기존 문장으로 수정하라.\
                 답변은 수정한 문장만을 출력하고, 문장 부호는 생략한다."
-    KEY = getKey('STT')
+    KEY = getKey('OPENAI')
     client = OpenAI(api_key=KEY)
     filePath = info.open_dialog(False)
     df = pd.read_excel(filePath)
@@ -145,8 +145,5 @@ def evaluation_model():
 if __name__ == '__main__':
     fp = info.open_dialog(False)
     df = pd.read_excel(fp)
-    plot_relative_change_with_smoothing(df["SER(User-STT)"], df["SER(User-COR)"], "SER")
-    plot_relative_change_with_smoothing(df["COS(User-STT)"], df["COS(User-COR)"], "COS")
-
-    # evaluate_score()
-    # able_to_correct()
+    evaluate_score()
+    able_to_correct()
