@@ -21,7 +21,7 @@ def getKey(title: str):
         key_data = json.load(f)
 
     try:
-        if key_data["VERSION"] != "1.0":
+        if key_data["VERSION"] != "1.1":
             raise Exception
     except Exception as e:
         print("UPDATE KEY FILE!!")

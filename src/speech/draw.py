@@ -1,82 +1,40 @@
 import matplotlib.pyplot as plt
-import numpy as np
+from pathlib import Path
+import pandas as pd
+from common.info import open_dialog
 
-# 분포도를 저장하는 함수
-def save_difference_histogram(list1, list2, filename="difference_histogram.png"):
-    # 두 리스트의 길이가 같은지 확인
-    if len(list1) != len(list2):
-        raise ValueError("두 리스트의 길이가 같아야 합니다.")
+# 변화량 그래프 그리기
+def draw_graph(filePath: Path, list1Name: str, list2Name: str, imageName: str):
+    # 엑셀 파일 데이터 읽기
+    data = pd.read_excel(filePath)
 
-    # 변화폭 계산
-    difference = [y - x for x, y in zip(list1, list2)]
+    # 'correct' 값이 '1'인 데이터만 필터링
+    filtered_data = data[data['correct'] == 1]
 
-    # 히스토그램 그리기
-    plt.figure(figsize=(10, 6))
-    plt.hist(difference, bins=30, color='b', alpha=0.7)
-    plt.title('Distribution of Differences (Histogram)')
-    plt.xlabel('Difference')
-    plt.ylabel('Frequency')
-    plt.grid(True)
+    # 리스트 A와 B 데이터 추출
+    A = filtered_data[list1Name].tolist()
+    B = filtered_data[list2Name].tolist()
 
-    # 그림 저장
-    plt.savefig(filename)
-    plt.close()  # 저장 후 창 닫기
+    # A 값을 기준으로 오름차순 정렬
+    sorted_A_B = sorted(zip(A, B), key=lambda x: x[0])
+    A_sorted, B_sorted = zip(*sorted_A_B)
 
-
-def plot_relative_change(list1, list2, filename):
-    # 두 리스트의 길이가 같은지 확인
-    if len(list1) != len(list2):
-        raise ValueError("두 리스트의 길이가 같아야 합니다.")
-
-    # 0으로 나누는 것을 방지하기 위해 list1에서 0이 아닌 값들만 상대적 변화율 계산
-    relative_change = [(y - x) / x * 100 if x != 0 else 0 for x, y in zip(list1, list2)]
-
-    # 변화율을 그래프로 그리기
-    plt.figure(figsize=(10, 6))
-    plt.plot(relative_change, marker='o', label='Relative Change (%)')
-
-    # 제목 및 레이블 설정
-    plt.title('Relative Change between List1 and List2')
-    plt.xlabel('Index')
-    plt.ylabel('Relative Change (%)')
-    plt.grid(True)
-    plt.legend()
-
-    # 그림 저장
-    plt.savefig(filename)
-    plt.close()  # 저장 후 창 닫기
-
-
-# 이동 평균 함수
-def moving_average(data, window_size):
-    return np.convolve(data, np.ones(window_size) / window_size, mode='valid')
-
-
-# 상대적 변화율 계산 및 이동 평균 적용 후 그래프 그리기
-def plot_relative_change_with_smoothing(list1, list2, filename, window_size=50):
-    if len(list1) != len(list2):
-        raise ValueError("두 리스트의 길이가 같아야 합니다.")
-
-    # 0으로 나누는 것을 방지하고, 변화율 계산
-    relative_change = [(y - x) / x * 100 if x != 0 else 0 for x, y in zip(list1, list2)]
-
-    # 이동 평균 적용
-    relative_change_smooth = moving_average(relative_change, window_size)
+    # A와 B의 차이 계산
+    difference = [b - a for a, b in zip(A_sorted, B_sorted)]
 
     # 그래프 그리기
     plt.figure(figsize=(10, 6))
-
-    # 원래 변화율의 이동 평균 그래프
-    plt.plot(relative_change_smooth, label=f'Moving Average (Window={window_size})', color='blue')
-    plt.title('Smoothed Relative Change between List1 and List2')
-    plt.xlabel('Index')
-    plt.ylabel('Relative Change (%)')
-    plt.grid(True)
+    plt.plot(A_sorted, difference, label=imageName, marker='o')
+    plt.xlabel(imageName + "(STT)")
+    plt.ylabel("Difference")
+    plt.title(f"{imageName} Difference Graph")
     plt.legend()
 
-    # y축 제한을 두어 너무 큰 변화를 억제
-    plt.ylim(-100, 100)
+    # 그래프 저장
+    imagePath = filePath.stem + '_' + imageName + '.png'
+    plt.savefig(imagePath)
+    plt.close()
 
-    # 그림 저장
-    plt.savefig(filename)
-    plt.close()  # 저장 후 창 닫기
+
+if __name__ == '__main__':
+    draw_graph(open_dialog(False), 'SER(u-a)', 'SER(u-g)', 'SER')
