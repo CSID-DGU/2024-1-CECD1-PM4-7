@@ -3,7 +3,9 @@ require("dotenv").config(); // 환경 변수 로드
 const {callUser} = require("./callUser");
 const {createRecognizeStream} = require('./stt');
 const {sendTTSResponse} = require("./tts");
-const {getGPTResponse} = require("./gpt");
+const {getSttCorrectionModelResponse} = require("./sttCorrectionModel");
+const {getChatModelResponse} = require("./chatModel");
+const {getChatSummaryModelResponse} = require("./chatSummaryModel");
 const https = require('https');
 const fs = require('fs');
 const express = require("express");
@@ -65,10 +67,11 @@ app.post("/voice", async (req, res) => {
     // console.log("사용자 인증 메시지: ", message);
 
     // 상담 시작 메시지 출력
-    const gptResponse = await getGPTResponse(gptRequest);
+    const chatModelResponse = await getChatModelResponse(gptRequest);
 
-    twiml.say({language: "ko-KR"}, gptResponse);
-    console.log("상담 시작 메시지: ", gptResponse);
+    twiml.say({language: "ko-KR"}, chatModelResponse);
+    //console.log("상담 시작 메시지: ", chatModelResponse);
+    console.log("\n복지봇: ", chatModelResponse);
 
     //양방향 스트림 연결 설정
     const connect = twiml.connect();
@@ -111,37 +114,43 @@ wss.on('connection', (ws) => {
 
         if(!recognizeStream) {
           //실시간 음성 처리
-          console.log("새 STT 스트림 생성");
+          //console.log("새 STT 스트림 생성");
           haslogged = false;
 
           recognizeStream = createRecognizeStream()
             .on('error', console.error)
             .on('data', data => {
-              console.log("\n시간: ", msg.media.timestamp);
-              console.log(data.results[0]);
+              //console.log("\n시간: ", msg.media.timestamp);
+              //console.log(data.results[0]);
               const transcription = data.results[0].alternatives[0].transcript;
-              console.log("STT 전사 결과: ", transcription);
+              //console.log("STT 전사 결과: ", transcription);
               
               // 0.3초 이내에 다음 전사된 텍스트를 받으면 타이머 초기화
               if(timeoutHandle) {
                 clearTimeout(timeoutHandle);
-                console.log("타이머 초기화");
+                //console.log("타이머 초기화");
               }
               
               // 0.3초 동안 구글 STT로 부터 받은 데이터가 없으면 문장이 끝났다고 판단
               timeoutHandle = setTimeout(async () => {
               recognizeStream.destroy();
-              console.log("STT 스트림 종료");
+              //console.log("STT 스트림 종료");
+              //console.log("STT 전사 결과: ", transcription);
+              console.log("\n상담자: ", transcription);
 
-              // STT 결과를 GPT에 전달
-              const gptResponse = await getGPTResponse(transcription);
-              console.log("\nGPT 결과: ", gptResponse, "\n");
+              // STT 결과를 STT 교정 모델에 전달
+              const sttCorrectionModelResponse = await getSttCorrectionModelResponse(transcription);
+              console.log("상담자(STT 교정 결과): ", sttCorrectionModelResponse);
+
+              // 교정된 STT 결과를 대화 진행 모델에 전달
+              const chatModelResponse = await getChatModelResponse(sttCorrectionModelResponse);
+              console.log("\n복지봇: ", chatModelResponse, "\n");
             
               // GPT 응답을 TTS로 변환
               await sendTTSResponse(ws, msg.streamSid, gptResponse);
               recognizeStream = null;
-              console.log("STT 스트림 초기화");
-            }, 700);
+              //console.log("STT 스트림 초기화");
+            }, 800);
           });
         }
 
@@ -150,13 +159,16 @@ wss.on('connection', (ws) => {
           //console.log(msg.media.timestamp);
           recognizeStream.write(msg.media.payload);
         } else if (!haslogged){
-          console.log("\nrecognizeStream이 종료되어 데이터를 쓸 수 없습니다.")
+          //console.log("\nrecognizeStream이 종료되어 데이터를 쓸 수 없습니다.")
           haslogged = true;
         }
         break;
       case "stop":
-        console.log("\n전화 종료");
+        //console.log("\n전화 종료");
         // console.log(msg);
+        const chatSummaryModelResponse = getChatSummaryModelResponse();
+        console.log("\n대화 내용 요약:", chatSummaryModelResponse);
+
         if(recognizeStream) {
           recognizeStream.destroy();
         }
