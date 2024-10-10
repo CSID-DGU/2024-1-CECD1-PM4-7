@@ -1,11 +1,8 @@
 import pandas as pd
 from client import send_request
 from openai import OpenAI
-from tuning_STT.calculate import load_models,calculate_cos,calculate_ser
 from common.auth_ import getKey
-from common.info import getModelName, getPrompt, open_dialog
-from pathlib import Path
-import json
+from common.info import open_dialog
 
 KEY = getKey('OPENAI')
 client = OpenAI(api_key=KEY)

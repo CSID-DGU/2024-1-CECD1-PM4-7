@@ -1,10 +1,8 @@
-from pprint import pprint
-
 import pandas as pd
 import sys
 from common import info
 from playground.client import send_request
-from tuning_STT.calculate import calculate_ser, calculate_cos, load_models
+from speech.calculate import calculate_ser, calculate_cos, load_models
 from pathlib import Path
 from openai import OpenAI
 from common.auth_ import getKey
