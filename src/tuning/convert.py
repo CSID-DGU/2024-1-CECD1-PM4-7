@@ -34,14 +34,21 @@ def completed_xlsx_to_jsonl(promptName: str, filepath: Path) -> Path:
 def chat_xlsx_to_jsonl(filepath: Path) -> Path:
     df_conv = pd.read_excel(filepath)
     json_list = []
-    msg = [{"role": "system", "content": df_conv.loc[0]['System content']}]
+    for i, row in df_conv.iterrows():
+        msg = []
+        for index, value in enumerate(row):
+            if pd.isna(value):
+                break
 
-    for index, row in df_conv.iterrows():
-        msg.append({"role": "user", "content": row['User content']})
-        msg.append({"role": "assistant", "content": row['Assistant content']})
+            if index == 0:
+                msg.append({"role": "system", "content": row[index]})
+            elif index%2 == 1:
+                msg.append({"role" : "user", "content": row[index]})
+            else:
+                msg.append({"role" : "assistant", "content": row[index]})
 
-    message = {"messages": msg}
-    json_list.append(json.dumps(message, ensure_ascii=False))
+        message = {"messages": msg}
+        json_list.append(json.dumps(message, ensure_ascii=False))
 
     output_file_path = filepath.with_suffix('.jsonl')
 
@@ -113,5 +120,5 @@ def convert_stt_result(sttResult: list, excelPath: Path, to_jsonl: bool):
 
 
 if __name__ == '__main__':
-    filepath = common.info.open_dialog(False)
-    completed_xlsx_to_jsonl("stt_validate", filepath)
+    filepath = common.info.open_dialog(False,  filetypes=[("Excel Files", "*.xlsx")])
+    chat_xlsx_to_jsonl(filepath)
