@@ -26,7 +26,7 @@ async function sendTTSResponse(ws, streamSid, gptResponse){
   speechStream.on('error', console.error);
 
   speechStream.on('end', () => {
-    console.log("TTS 스트림 종료");
+    //console.log("TTS 스트림 종료");
   });
 }
 
