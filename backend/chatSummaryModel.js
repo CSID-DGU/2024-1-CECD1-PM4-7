@@ -16,25 +16,26 @@ const modelNamePath = path.resolve(__dirname, "../key/model.json");
 const modelNameData = JSON.parse(fs.readFileSync(modelNamePath, "utf-8"));
 const modelName = modelNameData.Summary;
 
-const {conversationsConent} = require("./chatModel");
+const {conversations: contents} = require("./chatModel");
 
 /**
  * STT로 전사된 텍스트를 GPT API에 전달하고 응답을 처리하는 함수
- * @param {string} gptRequest - GPT에 전달할 요청 텍스트
  * @return {Promise<string>} GPT의 응답 텍스트
  */
 async function getChatSummaryModelResponse() {
   // 요약 모델 프롬프트와 대화 기록
+  contents.shift();
   let conversations = [
     {
       role: "system",
       content: Prompt,
     },
-    {
-      role: "user",
-      content: conversationsConent,
-    }
+    ...contents
   ];
+
+  // 첫 번째 요소를 제외한 대화 기록을 추가
+  conversations = conversations.concat(conversations.slice(1));
+  //console.log("요약 모델 로그: ", conversations);
 
   // 대화 기록을 기반으로 GPT API에 응답을 요청
   const response = await openai.chat.completions.create({
