@@ -1,0 +1,29 @@
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.user-message {
+  align-self: flex-end;
+  background-color: #0084ff;
+  color: white;
+  padding: 10px;
+  border-radius: 15px;
+  margin: 5px 0;
+  max-width: 60%;
+  text-align: right;
+}
+
+.gpt-message {
+  align-self: flex-start;
+  background-color: #e5e5ea;
+  color: black;
+  padding: 10px;
+  border-radius: 15px;
+  margin: 5px 0;
+  max-width: 60%;
+  text-align: left;
+}
