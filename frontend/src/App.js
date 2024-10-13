@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
+import botIcon from './logo_black.png';
+import userIcon from './user.png';
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -48,15 +50,41 @@ function App() {
   }, []);
 
   return (
-    <div className="chat-container">
-      {messages.map((message, index) =>(
-        <div
-          key={index}
-          className={message.type === 'user' ? 'user-message' : 'gpt-message'}
-        >
-          {message.text}
+    <div className="chat-frame">
+      <div className="header">
+        <div className="bot-info">
+          <img src={botIcon} alt="복지봇" className="bot-header-icon" />
+          <span className="bot-header-name">복지봇</span>
+        </div>
+      </div>
+
+      <div className="basic-message">
+        모든 대화는 인공지능 알고리즘에 의해 자동<br /> 생성되는 것으로 사실과 다를 수 있습니다.
+      </div>
+
+      <div className="date">2024.10.14</div>
+
+      <div className="chat-container">
+        {messages.map((message, index) => (
+          <div key={index} className={message.type === 'user' ? 'user-message-container' : 'gpt-message-container'}>
+            {message.type === 'gpt' && (
+              <div className="gpt-message-header">
+                <img src={botIcon} alt="복지봇" className="bot-icon" />
+                <span className="bot-name">복지봇</span>
+              </div>
+            )}
+            {message.type === 'user' && (
+              <div className="user-message-header">
+                <span className="user-name">상담자</span>
+                <img src={userIcon} alt="상담자" className="user-icon" />
+              </div>
+            )}
+            <div className={message.type === 'user' ? 'user-message' : 'gpt-message'}>
+              {message.text}
+            </div>
           </div>
-          ))}
+        ))}
+      </div>
     </div>
   );
 }
