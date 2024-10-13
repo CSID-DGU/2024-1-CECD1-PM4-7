@@ -78,6 +78,11 @@ app.post("/voice", async (req, res) => {
     //console.log("상담 시작 메시지: ", chatModelResponse);
     console.log("\n복지봇: ", chatModelResponse);
 
+    // React WebSocket으로도 전송
+    if (wsReactConnection && wsReactConnection.readyState === WebSocket.OPEN) {
+      wsReactConnection.send(JSON.stringify({ event: 'gptResponse', chatModelResponse }));
+    }
+
     //양방향 스트림 연결 설정
     const connect = twiml.connect();
     connect.stream({
