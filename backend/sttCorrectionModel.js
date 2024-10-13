@@ -10,7 +10,7 @@ const fs = require("fs");
 const path = require("path");
 const promptPath = path.resolve(__dirname, "../key/prompt.json");
 const promptData = JSON.parse(fs.readFileSync(promptPath, "utf-8"));
-const Prompt = promptData.stt_correction;
+const Prompt = promptData.stt_correction_241010;
 
 const modelNamePath = path.resolve(__dirname, "../key/model.json");
 const modelNameData = JSON.parse(fs.readFileSync(modelNamePath, "utf-8"));
