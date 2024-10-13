@@ -19,10 +19,20 @@ function App() {
           ...prevMessages,
           { type: 'user', text: data.transcription },
         ]);
+      } else if (data.event === 'sttCorrection') {
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { type: 'user', text: `수정된 텍스트: ${data.sttCorrectionModelResponse}` },
+        ]);
       } else if (data.event === 'gptResponse') {
         setMessages((prevMessages) => [
           ...prevMessages,
           { type: 'gpt', text: data.chatModelResponse },
+        ]);
+      } else if (data.event === 'chatSummary') {
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {type:'gpt', text: `대화 내용 요약: ${data.chatSummaryModelResponse}` },
         ]);
       }
     };

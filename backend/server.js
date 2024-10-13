@@ -97,14 +97,32 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
 });
 
+// React WebSocket 연결을 전역 변수로 저장
+let wsReactConnection = null;
+
 // 업그레이드 요청 처리
 httpsServer.on('upgrade', (request, socket, head) => {
   const pathname = new URL(request.url, `https://${request.headers.host}`).pathname;
 
-  if (pathname === '/twilio') {
+  if (pathname === '/react') {
+    wss.handleUpgrade(request, socket, head, (wsReact) => {
+      console.log("\nReact WebSocket 연결 성공");
+      wsReactConnection = wsReact; // React WebSocket 연결 저장
+
+      wsReact.on('message', (message) => {
+        console.log('React WebSocket 메시지: ', message);
+      });
+
+      wsReact.on('close', () => {
+        console.log('React WebSocket 연결 종료');
+        wsReactConnection = null; // React 연결 종료 시 null로 설정
+      });
+    });
+  } 
+
+  else if (pathname === '/twilio') {
     wss.handleUpgrade(request, socket, head, (wsTwilio) => {
       console.log("\nTwilio WebSocket 연결 성공");
-      wss.emit('connection', wsTwilio, request);
 
       let recognizeStream = null;
       let timeoutHandle = null;
@@ -127,7 +145,7 @@ httpsServer.on('upgrade', (request, socket, head) => {
             //console.log(msg);
             if(!recognizeStream) {
               //실시간 음성 처리
-              console.log("새 STT 스트림 생성");
+              //console.log("새 STT 스트림 생성");
               haslogged = false;
 
               recognizeStream = createRecognizeStream()
@@ -136,30 +154,37 @@ httpsServer.on('upgrade', (request, socket, head) => {
                   //console.log("\n시간: ", msg.media.timestamp);
                   //console.log(data.results[0]);
                   const transcription = data.results[0].alternatives[0].transcript;
-                  console.log("STT 전사 결과: ", transcription);
+                  //console.log("상담자(음성 처리 중): ", transcription);
             
-                  // 0.3초 이내에 다음 전사된 텍스트를 받으면 타이머 초기화
+                  // 1초 이내에 다음 전사된 텍스트를 받으면 타이머 초기화
                   if(timeoutHandle) {
                     clearTimeout(timeoutHandle);
                     //console.log("타이머 초기화");
                   }
             
-                  // 0.3초 동안 구글 STT로 부터 받은 데이터가 없으면 문장이 끝났다고 판단
+                  // 1초 동안 구글 STT로 부터 받은 데이터가 없으면 문장이 끝났다고 판단
                   timeoutHandle = setTimeout(async () => {
                     recognizeStream.destroy();
                     //console.log("STT 스트림 종료");
-                    console.log("STT 전사 결과: ", transcription);
                     console.log("\n상담자: ", transcription);
-                    //wsReact.send(JSON.stringify({ event: 'transcription', transcription }));
+                    // Twilio WebSocket에서 받은 STT 전사 데이터를 React로 전송
+                    if (wsReactConnection && wsReactConnection.readyState === WebSocket.OPEN) {
+                      wsReactConnection.send(JSON.stringify({ event: 'transcription', transcription }));
+                    }
 
                     // STT 결과를 STT 교정 모델에 전달
                     const sttCorrectionModelResponse = await getSttCorrectionModelResponse(transcription);
                     console.log("상담자(STT 교정 결과): ", sttCorrectionModelResponse);
+                    if (wsReactConnection && wsReactConnection.readyState === WebSocket.OPEN) {
+                      wsReactConnection.send(JSON.stringify({ event: 'sttCorrection', sttCorrectionModelResponse }));
+                    }
 
                     // 교정된 STT 결과를 대화 진행 모델에 전달
                     const chatModelResponse = await getChatModelResponse(sttCorrectionModelResponse);
                     console.log("\n복지봇: ", chatModelResponse, "\n");
-                    //wsReact.send(JSON.stringify({ event: 'gptResponse', chatModelResponse }));
+                    if (wsReactConnection && wsReactConnection.readyState === WebSocket.OPEN) {
+                      wsReactConnection.send(JSON.stringify({ event: 'gptResponse', chatModelResponse }));
+                    }
 
                     // GPT 응답을 TTS로 변환
                     await sendTTSResponse(wsTwilio, msg.streamSid, chatModelResponse);
@@ -192,22 +217,16 @@ httpsServer.on('upgrade', (request, socket, head) => {
       wsTwilio.on('close', async() => {
           const chatSummaryModelResponse = await getChatSummaryModelResponse();
           console.log("\n대화 내용 요약:", chatSummaryModelResponse);
+          if (wsReactConnection && wsReactConnection.readyState === WebSocket.OPEN) {
+            wsReactConnection.send(JSON.stringify({ event: 'chatSummary', chatSummaryModelResponse }));
+          }
+
           console.log("\n클라이언트와 연결이 종료되었습니다.");
           isFirstCalling = true;
       });  
     });
   } 
-  else if (pathname === '/react') {
-    wss.handleUpgrade(request, socket, head, (wsReact) => {
-      console.log("\nReact WebSocket 연결 성공");
-      wss.emit('connection', wsReact, request);
-
-      wsReact.on('message', (message) => {
-        console.log('React WebSocket 메시지:', message);
-      });
-    });
-  } 
   else {
     socket.destroy(); // 다른 경로는 연결을 종료
-    }
+  }
 });
