@@ -60,4 +60,14 @@ async function getChatModelResponse(gptRequest) {
   return gptContent;
 }
 
-module.exports = {conversations, getChatModelResponse};
+// 대화 기록 초기화
+function resetChatModelConversations() {
+  conversations.length = 0;
+  conversations.push({
+    role: "system",
+    content: Prompt,
+  });
+}
+
+
+module.exports = {conversations, getChatModelResponse,  resetChatModelConversations};

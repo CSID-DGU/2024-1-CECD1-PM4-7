@@ -60,4 +60,13 @@ async function getSttCorrectionModelResponse(gptRequest) {
   return gptContent;
 }
 
-module.exports = {getSttCorrectionModelResponse};
+// 대화 기록 초기화
+function resetSttCorrectionModelConversations() {
+  conversations.length = 0;
+  conversations.push({
+    role: "system",
+    content: Prompt,
+  });
+}
+
+module.exports = {getSttCorrectionModelResponse, resetSttCorrectionModelConversations};

@@ -1,9 +1,11 @@
 // 구글 TTS로 텍스트를 음성으로 변환
 const {TextToSpeechClient} = require('@google-cloud/text-to-speech');
 const {PassThrough} = require('stream');
+
 const client = new TextToSpeechClient({
   keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
 });
+
 
 async function sendTTSResponse(ws, streamSid, gptResponse){
   const speechStream = await synthesizeSpeechToStream(gptResponse);
@@ -26,7 +28,18 @@ async function sendTTSResponse(ws, streamSid, gptResponse){
   speechStream.on('error', console.error);
 
   speechStream.on('end', () => {
-    //console.log("TTS 스트림 종료");
+    console.log("TTS 음성 출력 완료");
+
+    // 음성 출력이 완료되면 종료를 알리는 mark 메시지 전송
+    ws.send(
+      JSON.stringify({
+        event: 'mark',
+        streamSid: streamSid,
+        mark: {
+          name: 'TTS-end'
+        }
+      })
+    );
   });
 }
 

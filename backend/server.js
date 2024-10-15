@@ -3,9 +3,9 @@ require("dotenv").config(); // 환경 변수 로드
 const {callUser} = require("./callUser");
 const {createRecognizeStream} = require('./stt');
 const {sendTTSResponse} = require("./tts");
-const {getSttCorrectionModelResponse} = require("./sttCorrectionModel");
-const {getChatModelResponse} = require("./chatModel");
-const {getChatSummaryModelResponse} = require("./chatSummaryModel");
+const {getSttCorrectionModelResponse, resetSttCorrectionModelConversations} = require("./sttCorrectionModel");
+const {getChatModelResponse, resetChatModelConversations} = require("./chatModel");
+const {getChatSummaryModelResponse, resetChatSummaryModelConversations} = require("./chatSummaryModel");
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
@@ -128,11 +128,10 @@ httpsServer.on('upgrade', (request, socket, head) => {
   else if (pathname === '/twilio') {
     wss.handleUpgrade(request, socket, head, (wsTwilio) => {
       console.log("\nTwilio WebSocket 연결 성공");
-
       let recognizeStream = null;
       let timeoutHandle = null;
-      let haslogged = false;
-      
+      let isAudioProcessing = false;   
+
       wsTwilio.on('message', message => {
         const msg = JSON.parse(message);
         
@@ -146,12 +145,16 @@ httpsServer.on('upgrade', (request, socket, head) => {
             //console.log(msg);        
             break;
           case "media":
-            // console.log("\n오디오 데이터 전달");
+            // 사용자 음성을 처리 중일 경우 음성 무시
+            if (isAudioProcessing) {
+              return;
+            }
+
+            // console.log("\n오디오 데이터 도착");
             //console.log(msg);
             if(!recognizeStream) {
               //실시간 음성 처리
               //console.log("새 STT 스트림 생성");
-              haslogged = false;
 
               recognizeStream = createRecognizeStream()
                 .on('error', console.error)
@@ -169,6 +172,7 @@ httpsServer.on('upgrade', (request, socket, head) => {
             
                   // 1초 동안 구글 STT로 부터 받은 데이터가 없으면 문장이 끝났다고 판단
                   timeoutHandle = setTimeout(async () => {
+                    isAudioProcessing = true;
                     recognizeStream.destroy();
                     //console.log("STT 스트림 종료");
                     console.log("\n상담자: ", transcription);
@@ -193,8 +197,6 @@ httpsServer.on('upgrade', (request, socket, head) => {
 
                     // GPT 응답을 TTS로 변환
                     await sendTTSResponse(wsTwilio, msg.streamSid, chatModelResponse);
-                    recognizeStream = null;
-                    //console.log("STT 스트림 초기화");
                   }, 1000);
                 });
             }
@@ -203,18 +205,22 @@ httpsServer.on('upgrade', (request, socket, head) => {
             if(!recognizeStream.destroyed && recognizeStream) {
               //console.log(msg.media.timestamp);
               recognizeStream.write(msg.media.payload);
-            } else if (!haslogged){
-              //console.log("\nrecognizeStream이 종료되어 데이터를 쓸 수 없습니다.")
-              haslogged = true;
             }
             break;
-            case "stop":
-              //console.log("\n전화 종료");
-              // console.log(msg);
-              if(recognizeStream) {
-                recognizeStream.destroy();
-              }
-              break;
+
+          case "mark":
+            console.log("TTS 재활성화");
+            isAudioProcessing = false;
+            recognizeStream = null;
+            break;
+
+          case "stop":
+            //console.log("\n전화 종료");
+            // console.log(msg);
+            if(recognizeStream) {
+              recognizeStream.destroy();
+            }
+            break;
         }
       });
           
@@ -226,8 +232,30 @@ httpsServer.on('upgrade', (request, socket, head) => {
             wsReactConnection.send(JSON.stringify({ event: 'chatSummary', chatSummaryModelResponse }));
           }
 
-          console.log("\n클라이언트와 연결이 종료되었습니다.");
+          console.log("\n전화 종료");
+
+          // 전화 연결 상태 및 음성 처리 상태 초기화
           isFirstCalling = true;
+          isAudioProcessing = false;
+
+          //각 모델의 대화 기록 초기화
+          resetChatModelConversations();
+          resetSttCorrectionModelConversations();
+          resetChatSummaryModelConversations();
+
+          // STT 스트림 초기화
+          if (recognizeStream) {
+            recognizeStream.destroy(); // STT 스트림 종료
+            recognizeStream = null; // STT 스트림을 null로 설정
+          }
+
+           // 4. 타이머 및 기타 상태 초기화
+          if (timeoutHandle) {
+            clearTimeout(timeoutHandle);
+            timeoutHandle = null; // 타이머 초기화
+            }
+
+          console.log("\n사용자 변수 초기화 완료");
       });  
     });
   } 
