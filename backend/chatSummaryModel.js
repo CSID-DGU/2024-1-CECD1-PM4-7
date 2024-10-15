@@ -41,8 +41,7 @@ async function getChatSummaryModelResponse() {
     ...contents
   ];
 
-  // 첫 번째 요소를 제외한 대화 기록을 추가
-  console.log("요약 모델 로그: ", conversations);
+  //console.log("요약 모델 로그: ", conversations);
 
   // 대화 기록을 기반으로 GPT API에 응답을 요청
   const response = await openai.chat.completions.create({
