@@ -18,6 +18,14 @@ const modelName = modelNameData.Summary;
 
 const {conversations: contents} = require("./chatModel");
 
+// 각 클라이언트의 대화 기록
+let conversations = [
+  {
+    role: "system",
+    content: Prompt,
+  },
+];
+
 /**
  * STT로 전사된 텍스트를 GPT API에 전달하고 응답을 처리하는 함수
  * @return {Promise<string>} GPT의 응답 텍스트
@@ -25,7 +33,7 @@ const {conversations: contents} = require("./chatModel");
 async function getChatSummaryModelResponse() {
   // 요약 모델 프롬프트와 대화 기록
   contents.shift();
-  let conversations = [
+  conversations = [
     {
       role: "system",
       content: Prompt,
@@ -34,8 +42,7 @@ async function getChatSummaryModelResponse() {
   ];
 
   // 첫 번째 요소를 제외한 대화 기록을 추가
-  conversations = conversations.concat(conversations.slice(1));
-  //console.log("요약 모델 로그: ", conversations);
+  console.log("요약 모델 로그: ", conversations);
 
   // 대화 기록을 기반으로 GPT API에 응답을 요청
   const response = await openai.chat.completions.create({
@@ -61,4 +68,13 @@ async function getChatSummaryModelResponse() {
   return gptContent;
 }
 
-module.exports = {getChatSummaryModelResponse};
+// 대화 기록 초기화
+function resetChatSummaryModelConversations() {
+  conversations.length = 0;
+  conversations.push({
+    role: "system",
+    content: Prompt,
+  });
+}
+
+module.exports = {getChatSummaryModelResponse, resetChatSummaryModelConversations};

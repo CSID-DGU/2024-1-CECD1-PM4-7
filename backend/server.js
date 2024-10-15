@@ -3,9 +3,9 @@ require("dotenv").config(); // 환경 변수 로드
 const {callUser} = require("./callUser");
 const {createRecognizeStream} = require('./stt');
 const {sendTTSResponse} = require("./tts");
-const {getSttCorrectionModelResponse} = require("./sttCorrectionModel");
-const {getChatModelResponse} = require("./chatModel");
-const {getChatSummaryModelResponse} = require("./chatSummaryModel");
+const {getSttCorrectionModelResponse, resetSttCorrectionModelConversations} = require("./sttCorrectionModel");
+const {getChatModelResponse, resetChatModelConversations} = require("./chatModel");
+const {getChatSummaryModelResponse, resetChatSummaryModelConversations} = require("./chatSummaryModel");
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
@@ -226,8 +226,29 @@ httpsServer.on('upgrade', (request, socket, head) => {
             wsReactConnection.send(JSON.stringify({ event: 'chatSummary', chatSummaryModelResponse }));
           }
 
-          console.log("\n클라이언트와 연결이 종료되었습니다.");
+          console.log("\n전화 종료");
+
+          // 전화 연결 상태 초기화
           isFirstCalling = true;
+
+          //각 모델의 대화 기록 초기화
+          resetChatModelConversations();
+          resetSttCorrectionModelConversations();
+          resetChatSummaryModelConversations();
+
+          // STT 스트림 초기화
+          if (recognizeStream) {
+            recognizeStream.destroy(); // STT 스트림 종료
+            recognizeStream = null; // STT 스트림을 null로 설정
+          }
+
+           // 4. 타이머 및 기타 상태 초기화
+          if (timeoutHandle) {
+            clearTimeout(timeoutHandle);
+            timeoutHandle = null; // 타이머 초기화
+            }
+
+          console.log("\n사용자 변수 초기화 완료");
       });  
     });
   } 
