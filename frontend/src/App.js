@@ -19,22 +19,22 @@ function App() {
       if (data.event === 'transcription') {
         setMessages((prevMessages) => [
           ...prevMessages,
-          { type: 'user', text: data.transcription },
+          { type: 'user', text: `원문: ${data.transcription}`, isTranscription: true },
         ]);
       } else if (data.event === 'sttCorrection') {
         setMessages((prevMessages) => [
           ...prevMessages,
-          { type: 'user', text: `수정된 텍스트: ${data.sttCorrectionModelResponse}` },
+          { type: 'user', text: `수정된 텍스트: ${data.sttCorrectionModelResponse}`, isTranscription: false},
         ]);
       } else if (data.event === 'gptResponse') {
         setMessages((prevMessages) => [
           ...prevMessages,
-          { type: 'gpt', text: data.chatModelResponse },
+          { type: 'gpt', text: data.chatModelResponse, isChatSummary: false },
         ]);
       } else if (data.event === 'chatSummary') {
         setMessages((prevMessages) => [
           ...prevMessages,
-          {type:'gpt', text: `대화 내용 요약: ${data.chatSummaryModelResponse}` },
+          {type:'gpt', text: `대화 내용 요약: ${data.chatSummaryModelResponse}`, isChatSummary: true },
         ]);
       }
     };
@@ -79,7 +79,13 @@ function App() {
                 <img src={userIcon} alt="상담자" className="user-icon" />
               </div>
             )}
-            <div className={message.type === 'user' ? 'user-message' : 'gpt-message'}>
+          <div
+            className={`
+              ${message.type === 'user' ? 'user-message' : 'gpt-message'} 
+              ${message.isTranscription ? 'transcription-message' : ''} 
+              ${message.isChatSummary ? 'chat-summary-message' : ''} 
+            `}
+          >
               {message.text}
             </div>
           </div>

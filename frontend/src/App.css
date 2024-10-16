@@ -63,7 +63,6 @@
   max-width: fit-content; /* 텍스트 길이에 맞춰 크기 조정 */
 }
 
-/* 나머지 기존 스타일 */
 .chat-container {
   display: flex;
   flex-direction: column;
@@ -138,4 +137,14 @@
   border-radius: 15px;
   max-width: 60%;
   text-align: left;
+}
+
+.transcription-message {
+  background-color: #4faaff;
+  color: white;
+}
+
+.chat-summary-message {
+  color: #ff0000;
+  font-weight: 580;
 }
