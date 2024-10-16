@@ -145,6 +145,7 @@
 }
 
 .chat-summary-message {
-  color: #ff0000;
+  background-color: #fffacd;
+  color: #cd853f;
   font-weight: 580;
 }
