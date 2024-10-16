@@ -3,6 +3,7 @@ require("dotenv").config(); // 환경 변수 로드
 const {callUser} = require("./callUser");
 const {createRecognizeStream} = require('./stt');
 const {sendTTSResponse} = require("./tts");
+const {playBeepSound} = require("./playBeepSound.js");
 const {getSttCorrectionModelResponse, resetSttCorrectionModelConversations} = require("./sttCorrectionModel");
 const {getChatModelResponse, resetChatModelConversations} = require("./chatModel");
 const {getChatSummaryModelResponse, resetChatSummaryModelConversations} = require("./chatSummaryModel");
@@ -142,6 +143,7 @@ httpsServer.on('upgrade', (request, socket, head) => {
             break;
           case "start":
             console.log("\n미디어 스트림 시작\n");
+            playBeepSound(wsTwilio, msg.streamSid);
             //console.log(msg);        
             break;
           case "media":
@@ -208,10 +210,12 @@ httpsServer.on('upgrade', (request, socket, head) => {
             }
             break;
 
-          case "mark":
-            console.log("TTS 재활성화");
+          case "mark":          
+            playBeepSound(wsTwilio, msg.streamSid);
+
             isAudioProcessing = false;
             recognizeStream = null;
+            console.log("TTS 재활성화");
             break;
 
           case "stop":
@@ -249,7 +253,7 @@ httpsServer.on('upgrade', (request, socket, head) => {
             recognizeStream = null; // STT 스트림을 null로 설정
           }
 
-           // 4. 타이머 및 기타 상태 초기화
+           // 타이머 및 기타 상태 초기화
           if (timeoutHandle) {
             clearTimeout(timeoutHandle);
             timeoutHandle = null; // 타이머 초기화
