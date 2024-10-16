@@ -8,7 +8,7 @@ import google.cloud.speech_v1p1beta1 as speech
 import google.cloud.storage as storage
 from audio import convert_audio_files, convert_text_data
 from evaluate import remove_correct, evaluate_SER
-from speech.util import remove_duplication
+from speech.correction.util import remove_duplication
 from common.info import open_dialog
 import sys
 

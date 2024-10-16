@@ -1,8 +1,8 @@
 import pandas as pd
 import sys
 from common import info
-from playground.client import send_request
-from speech.calculate import calculate_ser, calculate_cos, load_models
+from playground.client import send_request_with_history
+from speech.correction.calculate import calculate_ser, calculate_cos, load_models
 from pathlib import Path
 from openai import OpenAI
 from common.auth_ import getKey
@@ -90,7 +90,7 @@ def able_to_correct():
                 "content": PROMPT
             }
         ]
-        response = send_request(client, conversation_history, stt)
+        response = send_request_with_history(client, conversation_history, stt)
         print(f"{index+1}: {orig}\t{response}")
         ser = calculate_ser(orig, response)
         corrected.append(response)

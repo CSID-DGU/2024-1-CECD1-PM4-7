@@ -2,7 +2,7 @@
 from openai import OpenAI
 from common.info import getPrompt, getModelName, open_dialog
 from common.auth_ import getKey
-from playground.client import send_request
+from playground.client import send_request_with_history
 import pandas as pd
 
 def stt_correction_test():
@@ -33,7 +33,7 @@ def stt_correction_test():
         ]
 
         # OpenAI API 요청 및 응답 받기
-        assistant_response = send_request(client, conversation_history, user_input, MODEL)
+        assistant_response = send_request_with_history(client, conversation_history, user_input, MODEL)
 
         # 응답 출력
         print("Assistant:", assistant_response)
@@ -74,7 +74,7 @@ def stt_validation_test():
         ]
 
         # OpenAI API 요청 및 응답 받기
-        assistant_response = send_request(client, conversation_history, user_input, MODEL)
+        assistant_response = send_request_with_history(client, conversation_history, user_input, MODEL)
 
         # 응답 출력
         print("Assistant:", assistant_response)

@@ -1,5 +1,5 @@
 import pandas as pd
-from client import send_request
+from client import send_request_with_history
 from openai import OpenAI
 from common.auth_ import getKey
 from common.info import open_dialog
@@ -24,7 +24,7 @@ if __name__ == "__main__":
         ]
 
         check = f"{df['User content'][index]}, {df['Corrected'][index]}"
-        gpt_response = send_request(client, conversation_history, check, 'chatgpt-4o-latest')
+        gpt_response = send_request_with_history(client, conversation_history, check, 'chatgpt-4o-latest')
         correct.append(gpt_response)
 
         # 출력

@@ -1,7 +1,7 @@
 from openai import OpenAI
 import common.info
 from common.auth_ import getKey
-from client import send_request
+from client import send_request_with_history
 import pandas as pd
 
 PROMPT = common.info.getPrompt("playground_summary")
@@ -32,7 +32,7 @@ while True:
     ]
 
     # OpenAI API 요청 및 응답 받기
-    assistant_response = send_request(client, conversation_history, user_input)
+    assistant_response = send_request_with_history(client, conversation_history, user_input)
 
     # 응답 출력
     print("Assistant:", assistant_response)

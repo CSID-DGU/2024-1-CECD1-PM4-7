@@ -6,7 +6,7 @@ from openai import OpenAI
 
 from common.auth_ import getKey
 from common.info import getModelName, open_dialog
-from playground.client import send_request
+from playground.client import send_request_with_history
 
 
 # GPT Playground를 사용하여 학습 데이터 생성
@@ -35,7 +35,7 @@ def createData_fromGPT():
         ]
 
         # OpenAI API 요청 및 응답 받기
-        assistant_response = send_request(client, conversation_history, user_input, MODEL)
+        assistant_response = send_request_with_history(client, conversation_history, user_input, MODEL)
 
         # 응답 출력
         print(f"\n{index+1}/{len(df)}")
