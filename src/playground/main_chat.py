@@ -3,7 +3,7 @@ import random
 import common.info
 from common.auth_ import getKey
 from saveFile import makeAssistFile, applyChat
-from client import send_request
+from client import send_request_with_history
 
 PROMPT = common.info.getPrompt("playground_chat")
 KEY = getKey('OPENAI')
@@ -34,12 +34,12 @@ first_ment = f"{NAME}: " + ", ".join(EMERGENCY_LIST)
 # 대화 진행
 print("아무것도 입력하지 않고 전송 시 종료됩니다.\n")
 print(f"You: {first_ment}")
-print("Assistant: ", send_request(client, conversation_history, first_ment, MODEL))
+print("Assistant: ", send_request_with_history(client, conversation_history, first_ment, MODEL))
 while True:
     user_input = input("You: ")
     if user_input == '':
         break
-    gpt_output = send_request(client, conversation_history, user_input, MODEL)
+    gpt_output = send_request_with_history(client, conversation_history, user_input, MODEL)
     print("Assistant:", gpt_output)
 
     if END_SIGNAL in gpt_output:

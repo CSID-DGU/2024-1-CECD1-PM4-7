@@ -6,7 +6,6 @@ import random
 import pandas as pd
 
 from common.info import open_dialog
-from tuning_STT.expand import remove_duplication
 
 
 def merge_json(filename: str):

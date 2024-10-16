@@ -7,6 +7,7 @@ from pathlib import Path
 
 
 # 학습 데이터 형태를 갖춘 엑셀파일을 사용
+# 일반 프롬프트 - 사용자 입력 - 모범 답안 형식의 경우 사용
 def completed_xlsx_to_jsonl(promptName: str, filepath: Path) -> Path:
     df_conv = pd.read_excel(filepath)
     json_list = []
@@ -29,6 +30,7 @@ def completed_xlsx_to_jsonl(promptName: str, filepath: Path) -> Path:
             f.write(item + '\n')
 
     return output_file_path
+
 
 # 대화모델 jsonl파일 생성용
 def chat_xlsx_to_jsonl(filepath: Path) -> Path:
