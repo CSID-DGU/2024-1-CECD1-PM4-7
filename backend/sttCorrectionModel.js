@@ -57,6 +57,7 @@ async function getSttCorrectionModelResponse(gptRequest) {
     content: gptContent,
   });
 
+  // console.log("stt 교정 모델 로그: ", conversations);
   return gptContent;
 }
 

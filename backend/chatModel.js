@@ -57,6 +57,8 @@ async function getChatModelResponse(gptRequest) {
     content: gptContent,
   });
 
+
+  // console.log("대화 모델 로그: ", conversations);
   return gptContent;
 }
 
