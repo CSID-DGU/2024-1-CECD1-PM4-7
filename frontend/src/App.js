@@ -43,6 +43,45 @@ function App() {
     setCrisisTypes(newCrisisTypes);
   };
 
+  // "전화 걸기" 버튼 클릭 시 처리
+  const handleCallClick = async () => {
+    if (!selectedPhoneNumber) {
+      alert('전화번호를 선택해주세요.');
+      return;
+    }
+
+    // 위기 유형이 최소 하나는 선택되어야 함
+    const selectedCrisisTypes = crisisTypes.filter(type => type);
+    if (selectedCrisisTypes.length === 0) {
+      alert('적어도 하나의 위기 유형을 선택해주세요.');
+      return;
+    }
+
+    try {
+      // 서버로 업데이트 요청 보내기
+      const response = await fetch('/api/updateCrisisTypes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phoneNumber: selectedPhoneNumber,
+          crisisTypes: selectedCrisisTypes,
+        }),
+      });
+
+      if (response.ok) {
+        alert('위기 유형이 업데이트되었습니다.');
+        // 필요 시 추가 동작 수행
+      } else {
+        alert('위기 유형 업데이트에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('위기 유형 업데이트 오류:', error);
+      alert('오류가 발생했습니다.');
+    }
+  };
+
   useEffect(() => {
     // WebSocket 연결 설정
     const socket = new WebSocket('wss://welfarebot.kr/react');
@@ -155,6 +194,9 @@ function App() {
             </select>
           </div>
         ))}
+        <div className="dropdown-row">
+          <button onClick={handleCallClick}>전화 걸기</button>
+        </div>
       </div>
     </div>
   );

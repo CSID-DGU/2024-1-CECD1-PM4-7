@@ -16,7 +16,7 @@ const {parse} = require('url');
 const twilio = require("twilio");
 
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, ScanCommand, GetCommand } = require('@aws-sdk/lib-dynamodb');
+const { DynamoDBDocumentClient, ScanCommand, GetCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
 
 // DocumentClient 생성
 const dynamoDbClient = new DynamoDBClient({ region: 'ap-northeast-2' });
@@ -90,6 +90,30 @@ app.get('/api/getCrisisTypes', async (req, res) => {
   } catch (error) {
     console.error('위기 유형 가져오기 오류:', error);
     res.status(500).send('오류 발생');
+  }
+});
+
+// 위기 유형 업데이트 API
+app.post('/api/updateCrisisTypes', async (req, res) => {
+  const { phoneNumber, crisisTypes } = req.body;
+  console.log('업데이트 요청 받음:', phoneNumber, crisisTypes);
+
+  try {
+    const params = {
+      TableName: 'users',
+      Key: { 'phoneNumber': phoneNumber },
+      UpdateExpression: 'SET crisisTypes = :crisisTypes',
+      ExpressionAttributeValues: {
+        ':crisisTypes': crisisTypes,
+      },
+    };
+
+    await dynamoDbDocClient.send(new UpdateCommand(params));
+    console.log('위기 유형 업데이트 성공');
+    res.status(200).send('위기 유형 업데이트 성공');
+  } catch (error) {
+    console.error('위기 유형 업데이트 오류:', error);
+    res.status(500).send('위기 유형 업데이트 실패');
   }
 });
 
