@@ -87,69 +87,72 @@ function App() {
   }, []);
 
   return (
-    <div className="chat-frame">
-      <div className="header">
-        <div className="bot-info">
-          <img src={botIcon} alt="복지봇" className="bot-header-icon" />
-          <span className="bot-header-name">복지봇</span>
-        </div>
-      </div>
-
     <div>
-      <label>전화번호:</label>
-      <select value={selectedPhoneNumber} onChange={handlePhoneNumberChange}>
-        <option value="">전화번호 선택</option>
-        {phoneNumbers.map((phoneNumber) => (
-          <option key={phoneNumber} value={phoneNumber}>{phoneNumber}</option>
-        ))}
-      </select>
-
-      {[0, 1, 2].map((index) => (
-        <div key={index}>
-          <label>위기 유형 {index + 1}:</label>
-          <select
-            value={crisisTypes[index]}
-            onChange={(e) => handleCrisisChange(index, e.target.value)}
-          >
-            <option value="">선택</option>
-            {crisisOptions.map((option) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
+      <div className="chat-frame">
+        <div className="header">
+          <div className="bot-info">
+            <img src={botIcon} alt="복지봇" className="bot-header-icon" />
+            <span className="bot-header-name">복지봇</span>
+          </div>
         </div>
-      ))}
-    </div>
+        <div className="basic-message">
+          모든 대화는 인공지능 알고리즘에 의해 자동<br /> 생성되는 것으로 사실과 다를 수 있습니다.
+        </div>
 
-      <div className="basic-message">
-        모든 대화는 인공지능 알고리즘에 의해 자동<br /> 생성되는 것으로 사실과 다를 수 있습니다.
+        <div className="date">2024.10.14</div>
+
+        <div className="chat-container">
+          {messages.map((message, index) => (
+            <div key={index} className={message.type === 'user' ? 'user-message-container' : 'gpt-message-container'}>
+              {message.type === 'gpt' && (
+                <div className="gpt-message-header">
+                  <img src={botIcon} alt="복지봇" className="bot-icon" />
+                  <span className="bot-name">복지봇</span>
+                </div>
+              )}
+              {message.type === 'user' && (
+                <div className="user-message-header">
+                  <span className="user-name">상담자</span>
+                  <img src={userIcon} alt="상담자" className="user-icon" />
+                </div>
+              )}
+            <div
+              className={`
+                ${message.type === 'user' ? 'user-message' : 'gpt-message'} 
+                ${message.isTranscription ? 'transcription-message' : ''} 
+                ${message.isChatSummary ? 'chat-summary-message' : ''} 
+              `}
+            >
+                {message.text}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="date">2024.10.14</div>
+      <div className = "dropdown-container">
+        <div className="dropdown-row">
+          <label>전화번호: </label>
+          <select value={selectedPhoneNumber} onChange={handlePhoneNumberChange}>
+            <option value="">전화번호 선택</option>
+            {phoneNumbers.map((phoneNumber) => (
+              <option key={phoneNumber} value={phoneNumber}>{phoneNumber}</option>
+            ))}
+        </select>
+        </div>
 
-      <div className="chat-container">
-        {messages.map((message, index) => (
-          <div key={index} className={message.type === 'user' ? 'user-message-container' : 'gpt-message-container'}>
-            {message.type === 'gpt' && (
-              <div className="gpt-message-header">
-                <img src={botIcon} alt="복지봇" className="bot-icon" />
-                <span className="bot-name">복지봇</span>
-              </div>
-            )}
-            {message.type === 'user' && (
-              <div className="user-message-header">
-                <span className="user-name">상담자</span>
-                <img src={userIcon} alt="상담자" className="user-icon" />
-              </div>
-            )}
-          <div
-            className={`
-              ${message.type === 'user' ? 'user-message' : 'gpt-message'} 
-              ${message.isTranscription ? 'transcription-message' : ''} 
-              ${message.isChatSummary ? 'chat-summary-message' : ''} 
-            `}
-          >
-              {message.text}
-            </div>
+        {[0, 1, 2].map((index) => (
+          <div className="dropdown-row" key={index}>
+            <label>위기 유형 {index + 1}: </label>
+            <select
+              value={crisisTypes[index]}
+              onChange={(e) => handleCrisisChange(index, e.target.value)}
+            >
+              <option value="">선택</option>
+              {crisisOptions.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
           </div>
         ))}
       </div>
