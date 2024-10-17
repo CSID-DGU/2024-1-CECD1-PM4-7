@@ -28,8 +28,6 @@ async function sendTTSResponse(ws, streamSid, gptResponse){
   speechStream.on('error', console.error);
 
   speechStream.on('end', () => {
-    console.log("TTS 음성 출력 완료");
-
     // 음성 출력이 완료되면 종료를 알리는 mark 메시지 전송
     ws.send(
       JSON.stringify({
