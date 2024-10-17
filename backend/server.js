@@ -72,7 +72,7 @@ app.post("/voice", async (req, res) => {
     //양방향 스트림 연결 설정
     const connect = twiml.connect();
     const stream = connect.stream({
-      url: `wss://welfarebot.kr/twilio?gptRequest=${encodeURIComponent(gptRequest)}`,
+      url: 'wss://welfarebot.kr/twilio',
       name: 'conversation_stream'
     });
 
@@ -135,8 +135,7 @@ httpsServer.on('upgrade', (request, socket, head) => {
             (async() => {
               try {
                 const gptRequest = msg.start.customParameters.gptRequest;
-                console.log("gptRequest 값:", gptRequest);
-                console.log("gptRequest 형식:", typeof gptRequest);
+                
                 chatModelResponse = await getChatModelResponse(gptRequest);
                 await sendTTSResponse(wsTwilio, msg.streamSid, chatModelResponse);
                 console.log("\n복지봇: ", chatModelResponse);
