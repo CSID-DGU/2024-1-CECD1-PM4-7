@@ -12,6 +12,7 @@ const fs = require('fs');
 const path = require('path');
 const express = require("express");
 const WebSocket = require('ws');
+const {parse} = require('url');
 const twilio = require("twilio");
 
 const app = express();
@@ -21,7 +22,7 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
 // React 정적 파일 제공
-app.use(express.static(path.join(__dirname, '../frontend/build'))); 
+app.use(express.static(path.join(__dirname, '../frontend/build')));
 
 // SSL 인증서와 개인 키 읽기
 const options = {
@@ -67,31 +68,21 @@ app.post("/voice", async (req, res) => {
   const twiml = new VoiceResponse();
   const gptRequest = req.query.gptRequest;
 
-  try {
-    // 사용자 인증 메시지 출력
-    // twiml.say({language: "ko-KR"}, message);
-    // console.log("사용자 인증 메시지: ", message);
-
-    // 상담 시작 메시지 출력
-    const chatModelResponse = await getChatModelResponse(gptRequest);
-
-    twiml.say({language: "ko-KR"}, chatModelResponse);
-    //console.log("상담 시작 메시지: ", chatModelResponse);
-    console.log("\n복지봇: ", chatModelResponse);
-
-    // React WebSocket으로도 전송
-    if (wsReactConnection && wsReactConnection.readyState === WebSocket.OPEN) {
-      wsReactConnection.send(JSON.stringify({ event: 'gptResponse', chatModelResponse }));
-    }
-
+  try {    
     //양방향 스트림 연결 설정
     const connect = twiml.connect();
-    connect.stream({
+    const stream = connect.stream({
       url: 'wss://welfarebot.kr/twilio',
       name: 'conversation_stream'
     });
+
+    // TwiML에 파라미터 추가
+    stream.parameter({
+      name: 'gptRequest',
+      value: gptRequest
+    });
   } catch (error) {
-    console.error("GPT 응답 처리 중 오류 발생: ", error);
+    console.error("오류 발생: ", error);
   }
 
   res.type("text/xml");
@@ -128,23 +119,35 @@ httpsServer.on('upgrade', (request, socket, head) => {
 
   else if (pathname === '/twilio') {
     wss.handleUpgrade(request, socket, head, (wsTwilio) => {
-      console.log("\nTwilio WebSocket 연결 성공");
       let recognizeStream = null;
       let timeoutHandle = null;
-      let isAudioProcessing = false;   
+      let isAudioProcessing = true;
+      let chatModelResponse = null;
 
       wsTwilio.on('message', message => {
         const msg = JSON.parse(message);
-        
+
         switch (msg.event) {
           case "connected":
-            console.log("\n미디어 스트림 연결됨");
-            //console.log(msg);
             break;
           case "start":
-            console.log("\n미디어 스트림 시작\n");
-            playBeepSound(wsTwilio, msg.streamSid);
-            //console.log(msg);        
+            // 상담 시작 메시지 출력
+            (async() => {
+              try {
+                const gptRequest = msg.start.customParameters.gptRequest;
+                
+                chatModelResponse = await getChatModelResponse(gptRequest);
+                await sendTTSResponse(wsTwilio, msg.streamSid, chatModelResponse);
+                console.log("\n복지봇: ", chatModelResponse);
+
+                // React WebSocket으로도 대화 전송
+                if (wsReactConnection && wsReactConnection.readyState === WebSocket.OPEN) {
+                  wsReactConnection.send(JSON.stringify({ event: 'gptResponse', chatModelResponse }));
+                }
+              } catch(error){
+                console.error("오류 발생: ", error);
+              }
+            }) ();    
             break;
           case "media":
             // 사용자 음성을 처리 중일 경우 음성 무시
@@ -152,8 +155,6 @@ httpsServer.on('upgrade', (request, socket, head) => {
               return;
             }
 
-            // console.log("\n오디오 데이터 도착");
-            //console.log(msg);
             if(!recognizeStream) {
               //실시간 음성 처리
               //console.log("새 STT 스트림 생성");
@@ -161,37 +162,33 @@ httpsServer.on('upgrade', (request, socket, head) => {
               recognizeStream = createRecognizeStream()
                 .on('error', console.error)
                 .on('data', data => {
-                  //console.log("\n시간: ", msg.media.timestamp);
-                  //console.log(data.results[0]);
                   const transcription = data.results[0].alternatives[0].transcript;
-                  //console.log("상담자(음성 처리 중): ", transcription);
             
                   // 1초 이내에 다음 전사된 텍스트를 받으면 타이머 초기화
                   if(timeoutHandle) {
                     clearTimeout(timeoutHandle);
-                    //console.log("타이머 초기화");
                   }
             
                   // 1초 동안 구글 STT로 부터 받은 데이터가 없으면 문장이 끝났다고 판단
                   timeoutHandle = setTimeout(async () => {
                     isAudioProcessing = true;
                     recognizeStream.destroy();
-                    //console.log("STT 스트림 종료");
                     console.log("\n상담자: ", transcription);
+
                     // Twilio WebSocket에서 받은 STT 전사 데이터를 React로 전송
                     if (wsReactConnection && wsReactConnection.readyState === WebSocket.OPEN) {
                       wsReactConnection.send(JSON.stringify({ event: 'transcription', transcription }));
                     }
 
                     // STT 결과를 STT 교정 모델에 전달
-                    const sttCorrectionModelResponse = await getSttCorrectionModelResponse(transcription);
+                    const sttCorrectionModelResponse = await getSttCorrectionModelResponse(transcription, chatModelResponse);
                     console.log("상담자(STT 교정 결과): ", sttCorrectionModelResponse);
                     if (wsReactConnection && wsReactConnection.readyState === WebSocket.OPEN) {
                       wsReactConnection.send(JSON.stringify({ event: 'sttCorrection', sttCorrectionModelResponse }));
                     }
 
                     // 교정된 STT 결과를 대화 진행 모델에 전달
-                    const chatModelResponse = await getChatModelResponse(sttCorrectionModelResponse);
+                    chatModelResponse = await getChatModelResponse(sttCorrectionModelResponse);
                     console.log("\n복지봇: ", chatModelResponse, "\n");
                     if (wsReactConnection && wsReactConnection.readyState === WebSocket.OPEN) {
                       wsReactConnection.send(JSON.stringify({ event: 'gptResponse', chatModelResponse }));
@@ -205,22 +202,18 @@ httpsServer.on('upgrade', (request, socket, head) => {
 
             // 스트림이 존재하고 destroy 되지 않았을 때 스트림에 데이터 쓰기
             if(!recognizeStream.destroyed && recognizeStream) {
-              //console.log(msg.media.timestamp);
               recognizeStream.write(msg.media.payload);
             }
             break;
 
           case "mark":          
-            playBeepSound(wsTwilio, msg.streamSid);
+            playBeepSound(wsTwilio, msg.streamSid);  //삐 소리 출력
 
             isAudioProcessing = false;
             recognizeStream = null;
-            console.log("TTS 재활성화");
             break;
 
           case "stop":
-            //console.log("\n전화 종료");
-            // console.log(msg);
             if(recognizeStream) {
               recognizeStream.destroy();
             }
@@ -264,6 +257,6 @@ httpsServer.on('upgrade', (request, socket, head) => {
     });
   } 
   else {
-    socket.destroy(); // 다른 경로는 연결을 종료
+    socket.destroy(); // 다른 경로는 연결 종료
   }
 });

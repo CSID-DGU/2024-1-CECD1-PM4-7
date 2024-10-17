@@ -64,6 +64,8 @@ async function getChatSummaryModelResponse() {
     content: gptContent,
   });
 
+  // console.log("대화 요약 모델 로그: ", conversations);
+
   return gptContent;
 }
 
