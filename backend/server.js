@@ -48,7 +48,7 @@ http.createServer(app).listen(80, () => {
 const VoiceResponse = twilio.twiml.VoiceResponse;
 let isFirstCalling = true; // 중복 전화 방지 플래그
 
-// 사용자에게 전화를 걸음
+// 전화 요청
 app.get("/call", async (req, res) => {
   if (!isFirstCalling) {
     return res.status(429).send("이미 전화가 진행 중입니다.");
@@ -64,19 +64,20 @@ app.get("/call", async (req, res) => {
   }
 });
 
+// 통화 연결
 app.post("/voice", async (req, res) => {
   const twiml = new VoiceResponse();
   const gptRequest = req.query.gptRequest;
 
   try {    
-    //양방향 스트림 연결 설정
+    // 양방향 스트림 연결 설정
     const connect = twiml.connect();
     const stream = connect.stream({
       url: 'wss://welfarebot.kr/twilio',
       name: 'conversation_stream'
     });
 
-    // TwiML에 파라미터 추가
+    // 파라미터 추가
     stream.parameter({
       name: 'gptRequest',
       value: gptRequest
@@ -101,6 +102,7 @@ let wsReactConnection = null;
 httpsServer.on('upgrade', (request, socket, head) => {
   const pathname = new URL(request.url, `https://${request.headers.host}`).pathname;
 
+  // 리엑트 WebSocket
   if (pathname === '/react') {
     wss.handleUpgrade(request, socket, head, (wsReact) => {
       console.log("\nReact WebSocket 연결 성공");
@@ -117,6 +119,7 @@ httpsServer.on('upgrade', (request, socket, head) => {
     });
   } 
 
+  // twilio WebSocket
   else if (pathname === '/twilio') {
     wss.handleUpgrade(request, socket, head, (wsTwilio) => {
       let recognizeStream = null;
@@ -135,7 +138,7 @@ httpsServer.on('upgrade', (request, socket, head) => {
             (async() => {
               try {
                 const gptRequest = msg.start.customParameters.gptRequest;
-                
+
                 chatModelResponse = await getChatModelResponse(gptRequest);
                 await sendTTSResponse(wsTwilio, msg.streamSid, chatModelResponse);
                 console.log("\n복지봇: ", chatModelResponse);
@@ -149,6 +152,7 @@ httpsServer.on('upgrade', (request, socket, head) => {
               }
             }) ();    
             break;
+
           case "media":
             // 사용자 음성을 처리 중일 경우 음성 무시
             if (isAudioProcessing) {
@@ -208,7 +212,6 @@ httpsServer.on('upgrade', (request, socket, head) => {
 
           case "mark":          
             playBeepSound(wsTwilio, msg.streamSid);  //삐 소리 출력
-
             isAudioProcessing = false;
             recognizeStream = null;
             break;
@@ -235,7 +238,7 @@ httpsServer.on('upgrade', (request, socket, head) => {
           isFirstCalling = true;
           isAudioProcessing = false;
 
-          //각 모델의 대화 기록 초기화
+          // 각 모델의 대화 기록 초기화
           resetChatModelConversations();
           resetSttCorrectionModelConversations();
           resetChatSummaryModelConversations();

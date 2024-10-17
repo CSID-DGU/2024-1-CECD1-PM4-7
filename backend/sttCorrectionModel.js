@@ -10,33 +10,36 @@ const fs = require("fs");
 const path = require("path");
 const promptPath = path.resolve(__dirname, "../key/prompt.json");
 const promptData = JSON.parse(fs.readFileSync(promptPath, "utf-8"));
-const Prompt = promptData.stt_correction_241010;
+const Prompt = promptData.stt_correction_241015;
 
 const modelNamePath = path.resolve(__dirname, "../key/model.json");
 const modelNameData = JSON.parse(fs.readFileSync(modelNamePath, "utf-8"));
 const modelName = modelNameData.stt_correction;
 
-// 각 클라이언트의 대화 기록
-let conversations = [
-  {
-    role: "system",
-    content: Prompt,
-  },
-];
+let allConversations = [];
 
 /**
  * STT로 전사된 텍스트를 GPT API에 전달하고 응답을 처리하는 함수
  * @param {string} gptRequest - GPT에 전달할 요청 텍스트
  * @return {Promise<string>} GPT의 응답 텍스트
  */
-async function getSttCorrectionModelResponse(gptRequest) {
-  // 사용자의 요청을 대화 기록에 추가
-  conversations.push({
-    role: "user",
-    content: gptRequest,
-  });
+async function getSttCorrectionModelResponse(gptRequest, chatModelResponse) {
+  // gpt 응답을 바탕으로 프롬프트 재구성
+  const modifiedPrompt = Prompt.replace("{}", `"${chatModelResponse}"`);
 
-  // 대화 기록을 기반으로 GPT API에 응답을 요청
+  // GPT API에 보낼 메세지 구성
+  let conversations = [
+    {
+      role: "system",
+      content: modifiedPrompt,
+    },
+    {
+      role: "user",
+      content: gptRequest,
+    },
+  ];
+
+  // GPT API에 응답 요청
   const response = await openai.chat.completions.create({
     model: modelName,
     messages: conversations,
@@ -51,23 +54,21 @@ async function getSttCorrectionModelResponse(gptRequest) {
   const gptResponse = response.choices[0].message;
   const gptContent = gptResponse.content;
 
-  // GPT의 응답을 대화 기록에 추가
   conversations.push({
     role: "assistant",
     content: gptContent,
   });
 
-  // console.log("stt 교정 모델 로그: ", conversations);
+  // 현재 대화 내용을 전체 대화 내용에 추가
+  allConversations.push(conversations);
+
+  console.log("stt 교정 모델 로그: ", allConversations);
   return gptContent;
 }
 
 // 대화 기록 초기화
 function resetSttCorrectionModelConversations() {
-  conversations.length = 0;
-  conversations.push({
-    role: "system",
-    content: Prompt,
-  });
+  allConversations.length = 0;
 }
 
 module.exports = {getSttCorrectionModelResponse, resetSttCorrectionModelConversations};
