@@ -15,6 +15,13 @@ const WebSocket = require('ws');
 const {parse} = require('url');
 const twilio = require("twilio");
 
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, ScanCommand, GetCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
+
+// DocumentClient 생성
+const dynamoDbClient = new DynamoDBClient({ region: 'ap-northeast-2' });
+const dynamoDbDocClient = DynamoDBDocumentClient.from(dynamoDbClient);
+
 const app = express();
 
 // JSON과 URL 자동 파싱
@@ -45,11 +52,77 @@ http.createServer(app).listen(80, () => {
   console.log("HTTP 서버가 포트 80에서 실행 중입니다. HTTPS로 리디렉션합니다.");
 });
 
+// DynamoDB에서 전화 번호 목록 가져오는 API
+app.get('/api/getPhoneNumbers', async (req, res) => {
+  try {
+    const params = {
+      TableName: "users",
+      ProjectionExpression: "phoneNumber",
+    };
+
+    const data = await dynamoDbDocClient.send(new ScanCommand(params));
+
+    const phoneNumbers = data.Items.map(item => item.phoneNumber);
+    res.json(phoneNumbers);
+  } catch (error) {
+    console.error("전화번호 목록 불러오기 오류:", error);
+    res.status(500).send("오류 발생");
+  }
+});
+
+app.get('/api/getCrisisTypes', async (req, res) => {
+  const phoneNumber = decodeURIComponent(req.query.phoneNumber);
+  console.log('Received phoneNumber:', phoneNumber); // 디버깅을 위한 로그
+
+  try {
+    const params = {
+      TableName: 'users',
+      Key: { 'phoneNumber': phoneNumber },
+    };
+
+    const data = await dynamoDbDocClient.send(new GetCommand(params));
+    console.log('GetItem data:', JSON.stringify(data, null, 2)); // 데이터 확인
+
+    const crisisTypes = data.Item && data.Item.crisisTypes
+      ? data.Item.crisisTypes
+      : [];
+    res.json(crisisTypes);
+  } catch (error) {
+    console.error('위기 유형 가져오기 오류:', error);
+    res.status(500).send('오류 발생');
+  }
+});
+
+// 위기 유형 업데이트 API
+app.post('/api/updateCrisisTypes', async (req, res) => {
+  const { phoneNumber, crisisTypes } = req.body;
+  console.log('업데이트 요청 받음:', phoneNumber, crisisTypes);
+
+  try {
+    const params = {
+      TableName: 'users',
+      Key: { 'phoneNumber': phoneNumber },
+      UpdateExpression: 'SET crisisTypes = :crisisTypes',
+      ExpressionAttributeValues: {
+        ':crisisTypes': crisisTypes,
+      },
+    };
+
+    await dynamoDbDocClient.send(new UpdateCommand(params));
+    console.log('위기 유형 업데이트 성공');
+    res.status(200).send('위기 유형 업데이트 성공');
+  } catch (error) {
+    console.error('위기 유형 업데이트 오류:', error);
+    res.status(500).send('위기 유형 업데이트 실패');
+  }
+});
+
 const VoiceResponse = twilio.twiml.VoiceResponse;
 let isFirstCalling = true; // 중복 전화 방지 플래그
 
 // 전화 요청
 app.get("/call", async (req, res) => {
+  const { phoneNumber } = req.query;
   if (!isFirstCalling) {
     return res.status(429).send("이미 전화가 진행 중입니다.");
   }
@@ -57,7 +130,7 @@ app.get("/call", async (req, res) => {
   isFirstCalling = false;
 
   try {
-    await callUser();
+    await callUser(phoneNumber);
     res.status(200).send("전화가 성공적으로 걸림");
   } catch (error) {
     console.error("전화 거는 과정에서 오류 발생: ", error);

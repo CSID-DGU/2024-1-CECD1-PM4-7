@@ -3,43 +3,47 @@ const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = require("twilio")(accountSid, authToken);
 
-const {DynamoDBClient, ScanCommand} = require('@aws-sdk/client-dynamodb');
-const dynamoDbClient = new DynamoDBClient({region:'ap-northeast-2'});
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, GetCommand } = require('@aws-sdk/lib-dynamodb');
+
+const dynamoDbClient = new DynamoDBClient({ region: 'ap-northeast-2' });
+const dynamoDbDocClient = DynamoDBDocumentClient.from(dynamoDbClient);
 
 /**
  * 사용자에게 전화를 거는 함수
  * @return {Promise<void>}
  */
-async function callUser() {
+async function callUser(phoneNumber) {
+  // DynamoDB에서 해당 사용자의 데이터 가져오기
   const params = {
-    TableName: 'users', // DynamoDB 테이블 이름
+    TableName: 'users',
+    Key: { 'phoneNumber': phoneNumber },
   };
 
-  // DynamoDB에서 모든 사용자 데이터를 가져옴
-  const data = await dynamoDbClient.send(new ScanCommand(params));
-
-  // for...of를 사용해 순차적으로 비동기 작업 처리
-  for (const userData of data.Items) {
-    const userName = userData.name.S;
-    const userPhoneNumber = userData.phoneNumber.S;
-
-    // crisisTypes는 LIst 형식이므로 각 요소의 문자열 값을 가져와 처리
-    const crisisTypesArray = userData.crisisTypes.L.map(item => item.S);
-    const crisisTypes = crisisTypesArray.join(', '); // 위기 유형들을 문자열로 변환
-
-    // TwiML에서 사용자 이름을 포함한 메시지 생성
-    const message = `${userName}님 본인이 맞으십니까? 맞으시다면 1번, 아니라면 2번을 눌러주세요.`;
-    const gptRequest = `${userName}: ${crisisTypes}`;
-
-    // Twilio API를 사용해 전화를 걸음
-    await client.calls.create({
-      url: `https://welfarebot.kr/voice?message=${encodeURIComponent(message)}&gptRequest=${encodeURIComponent(gptRequest)}`,
-      to: userPhoneNumber,
-      from: '+12566699723',
-      // statusCallback: 'http://13.125.79.179/call-completed',
-      // statusCallbackEvent: ['completed'],
-    });
+  const data = await dynamoDbDocClient.send(new GetCommand(params));
+  
+  if (!data.Item) {
+    throw new Error('해당 전화번호의 사용자를 찾을 수 없습니다.');
   }
+
+
+  const userData = data.Item;
+  const userName = userData.name;
+  const crisisTypesArray = userData.crisisTypes || [];
+  const crisisTypes = crisisTypesArray.join(', '); // 위기 유형들을 문자열로 변환
+    
+  // TwiML에서 사용자 이름을 포함한 메시지 생성
+  const message = `${userName}님 본인이 맞으십니까? 맞으시다면 1번, 아니라면 2번을 눌러주세요.`;
+  const gptRequest = `${userName}: ${crisisTypes}`;
+
+  // Twilio API를 사용해 전화를 걸음
+  await client.calls.create({
+    url: `https://welfarebot.kr/voice?message=${encodeURIComponent(message)}&gptRequest=${encodeURIComponent(gptRequest)}`,
+    to: phoneNumber,
+    from: '+12566699723',
+    // statusCallback: 'http://13.125.79.179/call-completed',
+    // statusCallbackEvent: ['completed'],
+  });
 }
 
 module.exports = {callUser};
