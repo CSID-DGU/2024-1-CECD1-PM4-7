@@ -12,7 +12,6 @@ const fs = require('fs');
 const path = require('path');
 const express = require("express");
 const WebSocket = require('ws');
-const {parse} = require('url');
 const twilio = require("twilio");
 
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
@@ -52,6 +51,7 @@ http.createServer(app).listen(80, () => {
   console.log("HTTP 서버가 포트 80에서 실행 중입니다. HTTPS로 리디렉션합니다.");
 });
 
+
 // DynamoDB에서 전화 번호 목록 가져오는 API
 app.get('/api/getPhoneNumbers', async (req, res) => {
   try {
@@ -70,9 +70,9 @@ app.get('/api/getPhoneNumbers', async (req, res) => {
   }
 });
 
+
 app.get('/api/getCrisisTypes', async (req, res) => {
   const phoneNumber = decodeURIComponent(req.query.phoneNumber);
-  console.log('Received phoneNumber:', phoneNumber); // 디버깅을 위한 로그
 
   try {
     const params = {
@@ -81,7 +81,6 @@ app.get('/api/getCrisisTypes', async (req, res) => {
     };
 
     const data = await dynamoDbDocClient.send(new GetCommand(params));
-    console.log('GetItem data:', JSON.stringify(data, null, 2)); // 데이터 확인
 
     const crisisTypes = data.Item && data.Item.crisisTypes
       ? data.Item.crisisTypes
@@ -93,10 +92,11 @@ app.get('/api/getCrisisTypes', async (req, res) => {
   }
 });
 
+
 // 위기 유형 업데이트 API
 app.post('/api/updateCrisisTypes', async (req, res) => {
   const { phoneNumber, crisisTypes } = req.body;
-  console.log('업데이트 요청 받음:', phoneNumber, crisisTypes);
+  console.log('\n업데이트 요청 받음:', phoneNumber, crisisTypes);
 
   try {
     const params = {
@@ -117,30 +117,43 @@ app.post('/api/updateCrisisTypes', async (req, res) => {
   }
 });
 
-const VoiceResponse = twilio.twiml.VoiceResponse;
-let isFirstCalling = true; // 중복 전화 방지 플래그
+
+// 현재 진행 중인 전화 상태 저장
+const activeCalls = new Map();
 
 // 전화 요청
 app.get("/call", async (req, res) => {
   const { phoneNumber } = req.query;
-  if (!isFirstCalling) {
-    return res.status(429).send("이미 전화가 진행 중입니다.");
+
+  // 이미 해당 번호로 전화가 진행 중인지 확인
+  if (activeCalls.has(phoneNumber)) {
+    console.log("\n", phoneNumber, "는 이미 통화가 진행 중입니다");
+    return res.status(429).send(`${phoneNumber}는 이미 통화가 진행 중입니다.`);
   }
 
-  isFirstCalling = false;
+  // 전화 진행 중인 상태로 설정
+  activeCalls.set(phoneNumber, true);
 
+  // 전화 걸기
   try {
     await callUser(phoneNumber);
-    res.status(200).send("전화가 성공적으로 걸림");
+    console.log("\n", phoneNumber, "로 전화가 성공적으로 걸렸습니다")
+    res.status(200).send('전화가 성공적으로 걸렸습니다.');
   } catch (error) {
-    console.error("전화 거는 과정에서 오류 발생: ", error);
-  }
+    // 오류 발생 시 전화 상태 초기화
+    activeCalls.delete(phoneNumber);
+    console.error("\n", phoneNumber, "로 전화 거는 중 오류 발생:", error);
+    res.status(500).send(`${phoneNumber}로 전화 거는 중 오류 발생`);
+  } 
 });
+
 
 // 통화 연결
 app.post("/voice", async (req, res) => {
+  const VoiceResponse = twilio.twiml.VoiceResponse;
   const twiml = new VoiceResponse();
   const gptRequest = req.query.gptRequest;
+  const phoneNumber = req.query.phoneNumber;
 
   try {    
     // 양방향 스트림 연결 설정
@@ -155,6 +168,11 @@ app.post("/voice", async (req, res) => {
       name: 'gptRequest',
       value: gptRequest
     });
+    stream.parameter({
+      name: 'phoneNumber',
+      value: phoneNumber
+    });
+
   } catch (error) {
     console.error("오류 발생: ", error);
   }
@@ -163,31 +181,47 @@ app.post("/voice", async (req, res) => {
   res.send(twiml.toString());
 });
 
+
+// 전화 종료
+app.post('/call-completed', (req, res) => {
+  const { phoneNumber } = req.query;
+
+  // 전화 상태 초기화
+  if (activeCalls.has(phoneNumber)) {
+    activeCalls.delete(phoneNumber);
+    console.log("\n", phoneNumber, " 전화 상태  초기화");
+  }
+
+  res.status(200).send(`${phoneNumber} 전화 상태 초기화`);
+});
+
+
 // API 경로 외의 모든 요청을 index.html로 라우팅
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
 });
 
+
 // React WebSocket 연결을 전역 변수로 저장
-let wsReactConnection = null;
+let wsReactConnections = new Map();
 
 // 업그레이드 요청 처리
 httpsServer.on('upgrade', (request, socket, head) => {
-  const pathname = new URL(request.url, `https://${request.headers.host}`).pathname;
+  const url = new URL(request.url, `https://${request.headers.host}`);
+  const pathname = url.pathname;
+  const searchParams = url.searchParams;
 
   // 리엑트 WebSocket
   if (pathname === '/react') {
     wss.handleUpgrade(request, socket, head, (wsReact) => {
       console.log("\nReact WebSocket 연결 성공");
-      wsReactConnection = wsReact; // React WebSocket 연결 저장
+      const phoneNumber = searchParams.get('phoneNumber');
 
-      wsReact.on('message', (message) => {
-        console.log('React WebSocket 메시지: ', message);
-      });
+      wsReactConnections.set(phoneNumber, wsReact); // 전화 번호를 키로 저장
 
       wsReact.on('close', () => {
-        console.log('React WebSocket 연결 종료');
-        wsReactConnection = null; // React 연결 종료 시 null로 설정
+        console.log(`React WebSocket 연결 종료 (전화번호: ${phoneNumber})`);
+        wsReactConnections.delete(phoneNumber); // React 연결 종료 시 제거
       });
     });
   } 
@@ -195,10 +229,12 @@ httpsServer.on('upgrade', (request, socket, head) => {
   // twilio WebSocket
   else if (pathname === '/twilio') {
     wss.handleUpgrade(request, socket, head, (wsTwilio) => {
+      let wsReactConnection = null;
       let recognizeStream = null;
       let timeoutHandle = null;
       let isAudioProcessing = true;
       let chatModelResponse = null;
+      let phoneNumber = null;
 
       wsTwilio.on('message', message => {
         const msg = JSON.parse(message);
@@ -207,16 +243,19 @@ httpsServer.on('upgrade', (request, socket, head) => {
           case "connected":
             break;
           case "start":
+            phoneNumber = msg.start.customParameters.phoneNumber;
+            const gptRequest = msg.start.customParameters.gptRequest;
+            console.log("\n전화번호", phoneNumber);
+            
             // 상담 시작 메시지 출력
             (async() => {
               try {
-                const gptRequest = msg.start.customParameters.gptRequest;
-
-                chatModelResponse = await getChatModelResponse(gptRequest);
+                chatModelResponse = await getChatModelResponse(phoneNumber, gptRequest);
                 await sendTTSResponse(wsTwilio, msg.streamSid, chatModelResponse);
                 console.log("\n복지봇: ", chatModelResponse);
 
-                // React WebSocket으로도 대화 전송
+                // 해당 전화번호의 React WebSocket으로도 대화 전송
+                wsReactConnection = wsReactConnections.get(phoneNumber);
                 if (wsReactConnection && wsReactConnection.readyState === WebSocket.OPEN) {
                   wsReactConnection.send(JSON.stringify({ event: 'gptResponse', chatModelResponse }));
                 }
@@ -258,14 +297,14 @@ httpsServer.on('upgrade', (request, socket, head) => {
                     }
 
                     // STT 결과를 STT 교정 모델에 전달
-                    const sttCorrectionModelResponse = await getSttCorrectionModelResponse(transcription, chatModelResponse);
+                    const sttCorrectionModelResponse = await getSttCorrectionModelResponse(phoneNumber, transcription, chatModelResponse);
                     console.log("상담자(STT 교정 결과): ", sttCorrectionModelResponse);
                     if (wsReactConnection && wsReactConnection.readyState === WebSocket.OPEN) {
                       wsReactConnection.send(JSON.stringify({ event: 'sttCorrection', sttCorrectionModelResponse }));
                     }
 
                     // 교정된 STT 결과를 대화 진행 모델에 전달
-                    chatModelResponse = await getChatModelResponse(sttCorrectionModelResponse);
+                    chatModelResponse = await getChatModelResponse(phoneNumber, sttCorrectionModelResponse);
                     console.log("\n복지봇: ", chatModelResponse, "\n");
                     if (wsReactConnection && wsReactConnection.readyState === WebSocket.OPEN) {
                       wsReactConnection.send(JSON.stringify({ event: 'gptResponse', chatModelResponse }));
@@ -290,46 +329,44 @@ httpsServer.on('upgrade', (request, socket, head) => {
             break;
 
           case "stop":
-            if(recognizeStream) {
-              recognizeStream.destroy();
-            }
+            (async () => {
+              const chatSummaryModelResponse = await getChatSummaryModelResponse(phoneNumber);
+              console.log("\n대화 내용 요약:", chatSummaryModelResponse);
+              if (wsReactConnection && wsReactConnection.readyState === WebSocket.OPEN) {
+                wsReactConnection.send(JSON.stringify({ event: 'chatSummary', chatSummaryModelResponse }));
+              }
+    
+              console.log("\n전화 종료");
+    
+              // 전화 연결 상태 및 음성 처리 상태 초기화
+              isFirstCalling = true;
+              isAudioProcessing = false;
+    
+              // 각 모델의 대화 기록 초기화
+              resetChatModelConversations(phoneNumber);
+              resetSttCorrectionModelConversations(phoneNumber);
+              resetChatSummaryModelConversations(phoneNumber);
+    
+              // STT 스트림 초기화
+              if (recognizeStream) {
+                recognizeStream.destroy(); // STT 스트림 종료
+                recognizeStream = null; // STT 스트림을 null로 설정
+              }
+    
+               // 타이머 및 기타 상태 초기화
+              if (timeoutHandle) {
+                clearTimeout(timeoutHandle);
+                timeoutHandle = null; // 타이머 초기화
+                }
+    
+              console.log("\n사용자 변수 초기화 완료");
+            }) ();
             break;
         }
       });
           
       // 연결 종료 처리
-      wsTwilio.on('close', async() => {
-          const chatSummaryModelResponse = await getChatSummaryModelResponse();
-          console.log("\n대화 내용 요약:", chatSummaryModelResponse);
-          if (wsReactConnection && wsReactConnection.readyState === WebSocket.OPEN) {
-            wsReactConnection.send(JSON.stringify({ event: 'chatSummary', chatSummaryModelResponse }));
-          }
-
-          console.log("\n전화 종료");
-
-          // 전화 연결 상태 및 음성 처리 상태 초기화
-          isFirstCalling = true;
-          isAudioProcessing = false;
-
-          // 각 모델의 대화 기록 초기화
-          resetChatModelConversations();
-          resetSttCorrectionModelConversations();
-          resetChatSummaryModelConversations();
-
-          // STT 스트림 초기화
-          if (recognizeStream) {
-            recognizeStream.destroy(); // STT 스트림 종료
-            recognizeStream = null; // STT 스트림을 null로 설정
-          }
-
-           // 타이머 및 기타 상태 초기화
-          if (timeoutHandle) {
-            clearTimeout(timeoutHandle);
-            timeoutHandle = null; // 타이머 초기화
-            }
-
-          console.log("\n사용자 변수 초기화 완료");
-      });  
+      wsTwilio.on('close', () => {});  
     });
   } 
   else {

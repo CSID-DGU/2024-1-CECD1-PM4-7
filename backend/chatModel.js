@@ -16,20 +16,26 @@ const modelNamePath = path.resolve(__dirname, "../key/model.json");
 const modelNameData = JSON.parse(fs.readFileSync(modelNamePath, "utf-8"));
 const modelName = modelNameData.Chat;
 
-// 각 클라이언트의 대화 기록
-let conversations = [
-  {
-    role: "system",
-    content: Prompt,
-  },
-];
+// 각 사용자의 대화 기록을 저장
+const conversationsMap = new Map();
 
-/**
- * STT로 전사된 텍스트를 GPT API에 전달하고 응답을 처리하는 함수
- * @param {string} gptRequest - GPT에 전달할 요청 텍스트
- * @return {Promise<string>} GPT의 응답 텍스트
- */
-async function getChatModelResponse(gptRequest) {
+
+//STT로 전사된 텍스트를 GPT API에 전달하고 응답을 처리하는 함수
+async function getChatModelResponse(phoneNumber, gptRequest) {
+  // 해당 사용자의 대화 기록 가져오기
+  let conversations = conversationsMap.get(phoneNumber);
+
+  // 대화 기록이 없으면 초기화
+  if (!conversations) {
+    conversations = [
+      {
+        role: "system",
+        content: Prompt,
+      },
+    ];
+    conversationsMap.set(phoneNumber, conversations);
+  }
+
   // 사용자의 요청을 대화 기록에 추가
   conversations.push({
     role: "user",
@@ -41,7 +47,7 @@ async function getChatModelResponse(gptRequest) {
     model: modelName,
     messages: conversations,
     temperature: 0.0,
-    max_tokens: 256, //1024 요약모델
+    max_tokens: 256,
     top_p: 0.0,
     frequency_penalty: 0,
     presence_penalty: 0,
@@ -57,19 +63,14 @@ async function getChatModelResponse(gptRequest) {
     content: gptContent,
   });
 
-
-  // console.log("대화 모델 로그: ", conversations);
+  console.log("대화 모델 로그: ", conversations);
   return gptContent;
 }
 
 // 대화 기록 초기화
-function resetChatModelConversations() {
-  conversations.length = 0;
-  conversations.push({
-    role: "system",
-    content: Prompt,
-  });
+function resetChatModelConversations(phoneNumber) {
+  conversationsMap.delete(phoneNumber);
 }
 
 
-module.exports = {conversations, getChatModelResponse,  resetChatModelConversations};
+module.exports = {conversationsMap, getChatModelResponse,  resetChatModelConversations};

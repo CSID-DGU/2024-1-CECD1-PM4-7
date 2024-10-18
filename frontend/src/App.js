@@ -12,6 +12,7 @@ function App() {
   const [phoneNumbers, setPhoneNumbers] = useState([]);  // 전화번호 리스트
   const [selectedPhoneNumber, setSelectedPhoneNumber] = useState('');
   const [crisisTypes, setCrisisTypes] = useState(['', '', '']); // 위기 유형
+  const [socket, setSocket] = useState(null);
   const [messages, setMessages] = useState([]);
 
   const chatContainerRef = useRef(null);
@@ -78,62 +79,63 @@ function App() {
         if (callResponse.ok) {
           alert('전화 연결이 시작되었습니다.');
           setMessages([]); // 대화 초기화
-        }
-      }
+
+          const socket = new WebSocket(`wss://welfarebot.kr/react?phoneNumber=${encodeURIComponent(selectedPhoneNumber)}`);
+          
+          socket.onopen = () => {
+            console.log('WebSocket 연결 성공');
+          };
+      
+          socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.event === 'transcription') {
+              setMessages((prevMessages) => [
+                ...prevMessages,
+                { type: 'user', text: `원문: ${data.transcription}`, isTranscription: true },
+              ]);
+            } else if (data.event === 'sttCorrection') {
+              setMessages((prevMessages) => [
+                ...prevMessages,
+                { type: 'user', text: `수정된 텍스트: ${data.sttCorrectionModelResponse}`, isTranscription: false},
+              ]);
+            } else if (data.event === 'gptResponse') {
+              setMessages((prevMessages) => [
+                ...prevMessages,
+                { type: 'gpt', text: data.chatModelResponse, isChatSummary: false },
+              ]);
+            } else if (data.event === 'chatSummary') {
+              setMessages((prevMessages) => [
+                ...prevMessages,
+                {type:'gpt', text: `대화 내용 요약: ${data.chatSummaryModelResponse}`, isChatSummary: true },
+              ]);
+            }
+          };
+      
+          socket.onclose = () => {
+            console.log('WebSocket 연결 종료');
+          };
+        } 
+      } 
     } catch (error) {
       console.error('DB 업데이트 및 전화거는 과정에서 오류 발생:', error);
       alert('오류가 발생했습니다.');
     }
   };
 
+  // 컴포넌트 언마운트 시 WebSocket 연결 해제
+  useEffect(() => {
+    return () => {
+      if (socket) {
+        socket.close();
+      }
+    };
+  }, [socket]);
+
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages]); // messages가 변경될 때마다 실행
-
-  useEffect(() => {
-    // WebSocket 연결 설정
-    const socket = new WebSocket('wss://welfarebot.kr/react');
-
-    socket.onopen = () => {
-      console.log('WebSocket 연결 성공');
-    };
-
-    socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.event === 'transcription') {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { type: 'user', text: `원문: ${data.transcription}`, isTranscription: true },
-        ]);
-      } else if (data.event === 'sttCorrection') {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { type: 'user', text: `수정된 텍스트: ${data.sttCorrectionModelResponse}`, isTranscription: false},
-        ]);
-      } else if (data.event === 'gptResponse') {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { type: 'gpt', text: data.chatModelResponse, isChatSummary: false },
-        ]);
-      } else if (data.event === 'chatSummary') {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          {type:'gpt', text: `대화 내용 요약: ${data.chatSummaryModelResponse}`, isChatSummary: true },
-        ]);
-      }
-    };
-
-    socket.onclose = () => {
-      console.log('WebSocket 연결 종료');
-    };
-    
-    // 컴포넌트가 언마운트될 때 WebSocket 연결 해제
-    return () => {
-      socket.close();
-    };
-  }, []);
 
   return (
     <div>
