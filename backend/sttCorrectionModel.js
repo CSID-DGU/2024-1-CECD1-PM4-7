@@ -62,7 +62,7 @@ async function getSttCorrectionModelResponse(gptRequest, chatModelResponse) {
   // 현재 대화 내용을 전체 대화 내용에 추가
   allConversations.push(conversations);
 
-  console.log("stt 교정 모델 로그: ", allConversations);
+  // console.log("stt 교정 모델 로그: ", allConversations);
   return gptContent;
 }
 
