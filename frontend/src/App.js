@@ -71,13 +71,14 @@ function App() {
       });
 
       if (response.ok) {
-        alert('위기 유형이 업데이트되었습니다.');
-        // 필요 시 추가 동작 수행
-      } else {
-        alert('위기 유형 업데이트에 실패했습니다.');
+        // 전화 걸기 API 호출
+        const callResponse = await fetch(`/call?phoneNumber=${encodeURIComponent(selectedPhoneNumber)}`);
+        if (callResponse.ok) {
+          alert('전화 연결이 시작되었습니다.');
+        }
       }
     } catch (error) {
-      console.error('위기 유형 업데이트 오류:', error);
+      console.error('DB 업데이트 및 전화거는 과정에서 오류 발생:', error);
       alert('오류가 발생했습니다.');
     }
   };

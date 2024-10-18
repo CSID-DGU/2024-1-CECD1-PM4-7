@@ -122,6 +122,7 @@ let isFirstCalling = true; // 중복 전화 방지 플래그
 
 // 전화 요청
 app.get("/call", async (req, res) => {
+  const { phoneNumber } = req.query;
   if (!isFirstCalling) {
     return res.status(429).send("이미 전화가 진행 중입니다.");
   }
@@ -129,7 +130,7 @@ app.get("/call", async (req, res) => {
   isFirstCalling = false;
 
   try {
-    await callUser();
+    await callUser(phoneNumber);
     res.status(200).send("전화가 성공적으로 걸림");
   } catch (error) {
     console.error("전화 거는 과정에서 오류 발생: ", error);
