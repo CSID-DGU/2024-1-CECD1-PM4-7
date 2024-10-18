@@ -7,6 +7,7 @@ const {playBeepSound} = require("./playBeepSound.js");
 const {getSttCorrectionModelResponse, resetSttCorrectionModelConversations} = require("./sttCorrectionModel");
 const {getChatModelResponse, resetChatModelConversations} = require("./chatModel");
 const {getChatSummaryModelResponse, resetChatSummaryModelConversations} = require("./chatSummaryModel");
+const {saveDataToSpreadsheets} = require('./spreadsheet');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
