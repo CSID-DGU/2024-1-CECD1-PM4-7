@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import botIcon from './logo_black.png';
 import userIcon from './user.png';
@@ -13,6 +13,8 @@ function App() {
   const [selectedPhoneNumber, setSelectedPhoneNumber] = useState('');
   const [crisisTypes, setCrisisTypes] = useState(['', '', '']); // 위기 유형
   const [messages, setMessages] = useState([]);
+
+  const chatContainerRef = useRef(null);
 
   useEffect(() => {
     // DynamoDB에서 이름 목록 가져오기
@@ -75,6 +77,7 @@ function App() {
         const callResponse = await fetch(`/call?phoneNumber=${encodeURIComponent(selectedPhoneNumber)}`);
         if (callResponse.ok) {
           alert('전화 연결이 시작되었습니다.');
+          setMessages([]); // 대화 초기화
         }
       }
     } catch (error) {
@@ -82,6 +85,12 @@ function App() {
       alert('오류가 발생했습니다.');
     }
   };
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]); // messages가 변경될 때마다 실행
 
   useEffect(() => {
     // WebSocket 연결 설정
@@ -139,9 +148,9 @@ function App() {
           모든 대화는 인공지능 알고리즘에 의해 자동<br /> 생성되는 것으로 사실과 다를 수 있습니다.
         </div>
 
-        <div className="date">2024.10.14</div>
+        <div className="date">2024.10.18</div>
 
-        <div className="chat-container">
+        <div className="chat-container" ref={chatContainerRef}>
           {messages.map((message, index) => (
             <div key={index} className={message.type === 'user' ? 'user-message-container' : 'gpt-message-container'}>
               {message.type === 'gpt' && (
