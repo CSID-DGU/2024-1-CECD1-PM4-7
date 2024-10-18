@@ -38,11 +38,11 @@ async function callUser(phoneNumber) {
 
   // Twilio API를 사용해 전화를 걸음
   await client.calls.create({
-    url: `https://welfarebot.kr/voice?message=${encodeURIComponent(message)}&gptRequest=${encodeURIComponent(gptRequest)}`,
+    url: `https://welfarebot.kr/voice?phoneNumber=${encodeURIComponent(phoneNumber)}&gptRequest=${encodeURIComponent(gptRequest)}`,
     to: phoneNumber,
     from: '+12566699723',
-    // statusCallback: 'http://13.125.79.179/call-completed',
-    // statusCallbackEvent: ['completed'],
+    statusCallback: `https://welfarebot.kr/call-completed?phoneNumber=${encodeURIComponent(phoneNumber)}`,
+    statusCallbackEvent: ['completed'],
   });
 }
 

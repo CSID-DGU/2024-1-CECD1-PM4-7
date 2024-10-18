@@ -16,29 +16,25 @@ const modelNamePath = path.resolve(__dirname, "../key/model.json");
 const modelNameData = JSON.parse(fs.readFileSync(modelNamePath, "utf-8"));
 const modelName = modelNameData.Summary;
 
-const {conversations: contents} = require("./chatModel");
+const {conversationsMap} = require("./chatModel");
 
-// 각 클라이언트의 대화 기록
-let conversations = [
-  {
-    role: "system",
-    content: Prompt,
-  },
-];
+// 각 사용자의 대화 기록을 저장
+const allConversationsMap = new Map();
 
-/**
- * STT로 전사된 텍스트를 GPT API에 전달하고 응답을 처리하는 함수
- * @return {Promise<string>} GPT의 응답 텍스트
- */
-async function getChatSummaryModelResponse() {
+
+// STT로 전사된 텍스트를 GPT API에 전달하고 응답을 처리하는 함수
+async function getChatSummaryModelResponse(phoneNumber) {
+
+  // `chatModel.js`에서 해당 사용자의 대화 기록 가져오기
+  const contents = conversationsMap.get(phoneNumber);
+  
   // 요약 모델 프롬프트와 대화 기록
-  contents.shift();
-  conversations = [
+  const conversations = [
     {
       role: "system",
       content: Prompt,
     },
-    ...contents
+    ...contents.slice(1),  //시스템 프롬프트 제외
   ];
 
   //console.log("요약 모델 로그: ", conversations);
@@ -64,18 +60,17 @@ async function getChatSummaryModelResponse() {
     content: gptContent,
   });
 
-  // console.log("대화 요약 모델 로그: ", conversations);
+  // 해당 사용자의 대화 요약 기록 저장
+  allConversationsMap.set(phoneNumber, conversations);
+
+  console.log("대화 요약 모델 로그: ", allConversationsMap.get(phoneNumber));
 
   return gptContent;
 }
 
 // 대화 기록 초기화
-function resetChatSummaryModelConversations() {
-  conversations.length = 0;
-  conversations.push({
-    role: "system",
-    content: Prompt,
-  });
+function resetChatSummaryModelConversations(phoneNumber) {
+  conversationsMap.delete(phoneNumber);
 }
 
 module.exports = {getChatSummaryModelResponse, resetChatSummaryModelConversations};
