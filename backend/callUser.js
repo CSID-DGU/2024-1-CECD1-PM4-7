@@ -40,9 +40,7 @@ async function callUser(phoneNumber) {
   await client.calls.create({
     url: `https://welfarebot.kr/voice?phoneNumber=${encodeURIComponent(phoneNumber)}&gptRequest=${encodeURIComponent(gptRequest)}`,
     to: phoneNumber,
-    from: '+12566699723',
-    statusCallback: `https://welfarebot.kr/call-completed?phoneNumber=${encodeURIComponent(phoneNumber)}`,
-    statusCallbackEvent: ['completed'],
+    from: '+12566699723'
   });
 }
 

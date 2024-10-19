@@ -22,10 +22,6 @@ async function playBeepSound(ws, streamSid) {
   });
 
   audioStream.on('error', console.error);
-  
-  audioStream.on('end', () => {
-    console.log("특수음 전송 완료");
-  });
 }
 
 /**

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
+import { ToastContainer, toast } from 'react-toastify';  // Toast 컴포넌트 임포트
+import 'react-toastify/dist/ReactToastify.css';  // Toast 스타일 임포트
 import botIcon from './logo_black.png';
 import userIcon from './user.png';
 
@@ -14,7 +16,7 @@ function App() {
   const [crisisTypes, setCrisisTypes] = useState(['', '', '']); // 위기 유형
   const [socket, setSocket] = useState(null);
   const [messages, setMessages] = useState([]);
-
+  
   const chatContainerRef = useRef(null);
 
   useEffect(() => {
@@ -22,7 +24,7 @@ function App() {
     fetch('/api/getPhoneNumbers')
       .then(response => response.json())
       .then(data => setPhoneNumbers(data))
-      .catch(error => console.error('이름 불러오기 오류:', error));
+      .catch(error => console.error('전화번호 불러오기 오류:', error));
   }, []);
 
   // 이름 선택 시 위기 유형 가져오기
@@ -108,11 +110,13 @@ function App() {
                 ...prevMessages,
                 {type:'gpt', text: `대화 내용 요약: ${data.chatSummaryModelResponse}`, isChatSummary: true },
               ]);
+            } else if(data.event === 'toast') {
+              toast.success(data.message);
             }
           };
       
           socket.onclose = () => {
-            console.log('WebSocket 연결 종료');
+            console.log('React WebSocket 연결 종료');
           };
         } 
       } 
@@ -210,6 +214,8 @@ function App() {
           <button onClick={handleCallClick}>전화 걸기</button>
         </div>
       </div>
+
+      <ToastContainer position="top-center" autoClose={2500} hideProgressBar={false} closeOnClick />
     </div>
   );
 }

@@ -63,7 +63,7 @@ async function getChatSummaryModelResponse(phoneNumber) {
   // 해당 사용자의 대화 요약 기록 저장
   allConversationsMap.set(phoneNumber, conversations);
 
-  console.log("대화 요약 모델 로그: ", allConversationsMap.get(phoneNumber));
+  // console.log("대화 요약 모델 로그: ", allConversationsMap.get(phoneNumber));
 
   return gptContent;
 }
@@ -73,4 +73,4 @@ function resetChatSummaryModelConversations(phoneNumber) {
   conversationsMap.delete(phoneNumber);
 }
 
-module.exports = {getChatSummaryModelResponse, resetChatSummaryModelConversations};
+module.exports = {allConversationsMap, getChatSummaryModelResponse, resetChatSummaryModelConversations};
