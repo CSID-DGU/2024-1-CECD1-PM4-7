@@ -63,7 +63,7 @@ async function getChatModelResponse(phoneNumber, gptRequest) {
     content: gptContent,
   });
 
-  console.log("대화 모델 로그: ", conversations);
+  // console.log("대화 모델 로그: ", conversations);
   return gptContent;
 }
 

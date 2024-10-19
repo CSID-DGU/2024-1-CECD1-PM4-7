@@ -182,21 +182,6 @@ app.post("/voice", async (req, res) => {
   res.send(twiml.toString());
 });
 
-
-// 전화 종료
-app.post('/call-completed', (req, res) => {
-  const { phoneNumber } = req.query;
-
-  // 전화 상태 초기화
-  if (activeCalls.has(phoneNumber)) {
-    activeCalls.delete(phoneNumber);
-    console.log("\n", phoneNumber, " 전화 상태  초기화");
-  }
-
-  res.status(200).send(`${phoneNumber} 전화 상태 초기화`);
-});
-
-
 // API 경로 외의 모든 요청을 index.html로 라우팅
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
@@ -328,46 +313,53 @@ httpsServer.on('upgrade', (request, socket, head) => {
             isAudioProcessing = false;
             recognizeStream = null;
             break;
-
+          
+          // 전화가 종료됐을 때: 대화 내용 요약, 스프레드 시트에 대화 내역 저장, 사용자 정보 초기화
           case "stop":
+            console.log("\n전화 종료");
+            
             (async () => {
               const chatSummaryModelResponse = await getChatSummaryModelResponse(phoneNumber);
               console.log("\n대화 내용 요약:", chatSummaryModelResponse);
               if (wsReactConnection && wsReactConnection.readyState === WebSocket.OPEN) {
                 wsReactConnection.send(JSON.stringify({ event: 'chatSummary', chatSummaryModelResponse }));
               }
-    
-              console.log("\n전화 종료");
-    
-              // 전화 연결 상태 및 음성 처리 상태 초기화
-              isFirstCalling = true;
-              isAudioProcessing = false;
-    
+
+              // 스프레드 시트에 대화 내역 저장
+              try {
+                await saveDataToSpreadsheets(phoneNumber);
+                wsReactConnection.send(JSON.stringify({ event: 'toast', message: '상담 데이터가 스프레드시트에 성공적으로 저장되었습니다!' }));
+              } catch(error) {
+                console.error("스프레드 시트에 데이터 저장 중 오류 발생: ", error);
+              }
+
               // 각 모델의 대화 기록 초기화
               resetChatModelConversations(phoneNumber);
               resetSttCorrectionModelConversations(phoneNumber);
               resetChatSummaryModelConversations(phoneNumber);
-    
+
               // STT 스트림 초기화
               if (recognizeStream) {
                 recognizeStream.destroy(); // STT 스트림 종료
                 recognizeStream = null; // STT 스트림을 null로 설정
               }
-    
-               // 타이머 및 기타 상태 초기화
+              
+              // 전화 연결 상태 및 음성 처리 상태 초기화
+              isAudioProcessing = false;
+              
+              // 타이머 및 기타 상태 초기화
               if (timeoutHandle) {
                 clearTimeout(timeoutHandle);
                 timeoutHandle = null; // 타이머 초기화
-                }
-    
-              console.log("\n사용자 변수 초기화 완료");
+              }              
+
+              // 전화 상태 초기화
+              activeCalls.delete(phoneNumber);
+              console.log(`\n대화 내용 저장 및 사용자 정보 초기화 완료(사용자: ${phoneNumber})`);
             }) ();
             break;
         }
       });
-          
-      // 연결 종료 처리
-      wsTwilio.on('close', () => {});  
     });
   } 
   else {

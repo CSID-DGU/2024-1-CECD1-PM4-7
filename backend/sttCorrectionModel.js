@@ -62,7 +62,7 @@ async function getSttCorrectionModelResponse(phoneNumber, gptRequest, chatModelR
   userConversations.push(conversations);
   allConversationsMap.set(phoneNumber, userConversations);
 
-  console.log("stt 교정 모델 로그: ", allConversationsMap.get(phoneNumber));
+  // console.log("stt 교정 모델 로그: ", allConversationsMap.get(phoneNumber));
   return gptContent;
 }
 
@@ -71,4 +71,4 @@ function resetSttCorrectionModelConversations(phoneNumber) {
   allConversationsMap.delete(phoneNumber);
 }
 
-module.exports = {getSttCorrectionModelResponse, resetSttCorrectionModelConversations};
+module.exports = {allConversationsMap,getSttCorrectionModelResponse, resetSttCorrectionModelConversations};
