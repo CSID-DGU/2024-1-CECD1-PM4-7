@@ -1,6 +1,6 @@
 // 서버 실행 및 라우팅 작업 수행
 require("dotenv").config(); // 환경 변수 로드
-const {callUser} = require("./callUser");
+const {getPhoneNumbers, getCrisisTypes, updateCrisisTypes, callUser} = require("./dynamoDB.js");
 const {createRecognizeStream} = require('./stt');
 const {sendTTSResponse} = require("./tts");
 const {playBeepSound} = require("./playBeepSound.js");
@@ -14,13 +14,6 @@ const path = require('path');
 const express = require("express");
 const WebSocket = require('ws');
 const twilio = require("twilio");
-
-const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, ScanCommand, GetCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
-
-// DocumentClient 생성
-const dynamoDbClient = new DynamoDBClient({ region: 'ap-northeast-2' });
-const dynamoDbDocClient = DynamoDBDocumentClient.from(dynamoDbClient);
 
 const app = express();
 
@@ -53,68 +46,37 @@ http.createServer(app).listen(80, () => {
 });
 
 
-// DynamoDB에서 전화 번호 목록 가져오는 API
+// 전화 번호 목록 가져오기
 app.get('/api/getPhoneNumbers', async (req, res) => {
   try {
-    const params = {
-      TableName: "users",
-      ProjectionExpression: "phoneNumber",
-    };
-
-    const data = await dynamoDbDocClient.send(new ScanCommand(params));
-
-    const phoneNumbers = data.Items.map(item => item.phoneNumber);
+    const phoneNumbers = await getPhoneNumbers();
     res.json(phoneNumbers);
   } catch (error) {
     console.error("전화번호 목록 불러오기 오류:", error);
-    res.status(500).send("오류 발생");
   }
 });
 
 
+// 위기 유형 가져오기
 app.get('/api/getCrisisTypes', async (req, res) => {
   const phoneNumber = decodeURIComponent(req.query.phoneNumber);
-
   try {
-    const params = {
-      TableName: 'users',
-      Key: { 'phoneNumber': phoneNumber },
-    };
-
-    const data = await dynamoDbDocClient.send(new GetCommand(params));
-
-    const crisisTypes = data.Item && data.Item.crisisTypes
-      ? data.Item.crisisTypes
-      : [];
+    const crisisTypes = await getCrisisTypes(phoneNumber);
     res.json(crisisTypes);
   } catch (error) {
     console.error('위기 유형 가져오기 오류:', error);
-    res.status(500).send('오류 발생');
   }
 });
 
 
-// 위기 유형 업데이트 API
+// 위기 유형 업데이트
 app.post('/api/updateCrisisTypes', async (req, res) => {
   const { phoneNumber, crisisTypes } = req.body;
-  console.log('\n업데이트 요청 받음:', phoneNumber, crisisTypes);
-
   try {
-    const params = {
-      TableName: 'users',
-      Key: { 'phoneNumber': phoneNumber },
-      UpdateExpression: 'SET crisisTypes = :crisisTypes',
-      ExpressionAttributeValues: {
-        ':crisisTypes': crisisTypes,
-      },
-    };
-
-    await dynamoDbDocClient.send(new UpdateCommand(params));
+    await updateCrisisTypes(phoneNumber, crisisTypes);
     console.log('위기 유형 업데이트 성공');
-    res.status(200).send('위기 유형 업데이트 성공');
   } catch (error) {
     console.error('위기 유형 업데이트 오류:', error);
-    res.status(500).send('위기 유형 업데이트 실패');
   }
 });
 
