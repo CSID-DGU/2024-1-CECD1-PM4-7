@@ -45,7 +45,6 @@ http.createServer(app).listen(80, () => {
   console.log("HTTP 서버가 포트 80에서 실행 중입니다. HTTPS로 리디렉션합니다.");
 });
 
-
 // 전화 번호 목록 가져오기
 app.get('/api/getPhoneNumbers', async (req, res) => {
   try {
@@ -53,9 +52,9 @@ app.get('/api/getPhoneNumbers', async (req, res) => {
     res.json(phoneNumbers);
   } catch (error) {
     console.error("전화번호 목록 불러오기 오류:", error);
+    res.status(500).send("오류 발생");  
   }
 });
-
 
 // 위기 유형 가져오기
 app.get('/api/getCrisisTypes', async (req, res) => {
@@ -65,9 +64,9 @@ app.get('/api/getCrisisTypes', async (req, res) => {
     res.json(crisisTypes);
   } catch (error) {
     console.error('위기 유형 가져오기 오류:', error);
+    res.status(500).send('오류 발생');
   }
 });
-
 
 // 위기 유형 업데이트
 app.post('/api/updateCrisisTypes', async (req, res) => {
@@ -75,11 +74,12 @@ app.post('/api/updateCrisisTypes', async (req, res) => {
   try {
     await updateCrisisTypes(phoneNumber, crisisTypes);
     console.log('위기 유형 업데이트 성공');
+    res.status(200).send('위기 유형 업데이트 성공');
   } catch (error) {
     console.error('위기 유형 업데이트 오류:', error);
+    res.status(500).send('위기 유형 업데이트 실패');
   }
 });
-
 
 // 현재 진행 중인 전화 상태 저장
 const activeCalls = new Map();
@@ -100,7 +100,7 @@ app.get("/call", async (req, res) => {
   // 전화 걸기
   try {
     await callUser(phoneNumber);
-    console.log("\n", phoneNumber, "로 전화가 성공적으로 걸렸습니다")
+    console.log("\n", phoneNumber, "로 전화가 성공적으로 걸렸습니다");
     res.status(200).send('전화가 성공적으로 걸렸습니다.');
   } catch (error) {
     // 오류 발생 시 전화 상태 초기화
