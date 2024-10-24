@@ -6,7 +6,6 @@ const client = new TextToSpeechClient({
   keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
 });
 
-
 async function sendTTSResponse(ws, streamSid, gptResponse){
   const speechStream = await synthesizeSpeechToStream(gptResponse);
 

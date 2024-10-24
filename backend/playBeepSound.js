@@ -24,10 +24,7 @@ async function playBeepSound(ws, streamSid) {
   audioStream.on('error', console.error);
 }
 
-/**
- * 음성 파일을 읽어 mulaw 형식의 오디오 데이터로 변환하고 스트림을 반환
- * @param {string} audioFilePath - 변환할 음성 파일 경로
- */
+// 음성 파일을 읽어 mulaw 형식의 오디오 데이터로 변환하고 스트림을 반환
 async function convertAudioToMulawStream(audioFilePath) {
   const ffmpeg = require('fluent-ffmpeg');
   const passThroughStream = new PassThrough();
