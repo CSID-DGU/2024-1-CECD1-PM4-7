@@ -4,6 +4,7 @@ const {getPhoneNumbers, getCrisisTypes, updateCrisisTypes, callUser} = require("
 const {createRecognizeStream} = require('./stt');
 const {sendTTSResponse} = require("./tts");
 const {playBeepSound} = require("./playBeepSound.js");
+const {getSttEvaluationModelResponse} = require("./sttEvaluationModel");
 const {getSttCorrectionModelResponse, resetSttCorrectionModelConversations} = require("./sttCorrectionModel");
 const {getChatModelResponse, resetChatModelConversations} = require("./chatModel");
 const {getChatSummaryModelResponse, resetChatSummaryModelConversations} = require("./chatSummaryModel");
@@ -244,15 +245,39 @@ httpsServer.on('upgrade', (request, socket, head) => {
                       wsReactConnection.send(JSON.stringify({ event: 'transcription', transcription }));
                     }
 
-                    // STT 결과를 STT 교정 모델에 전달
-                    const sttCorrectionModelResponse = await getSttCorrectionModelResponse(phoneNumber, transcription, chatModelResponse);
-                    console.log("상담자(STT 교정 결과): ", sttCorrectionModelResponse);
+                    // STT 결과를 STT 평가 모델에 전달
+                    const sttEvaluationModelResponse = await getSttEvaluationModelResponse(chatModelResponse, transcription);
+                    console.log("상담자(STT 평가 결과): ", sttEvaluationModelResponse);
                     if (wsReactConnection && wsReactConnection.readyState === WebSocket.OPEN) {
-                      wsReactConnection.send(JSON.stringify({ event: 'sttCorrection', sttCorrectionModelResponse }));
+                      wsReactConnection.send(JSON.stringify({ event: 'sttEvaluation', sttEvaluationModelResponse }));
                     }
 
-                    // 교정된 STT 결과를 대화 진행 모델에 전달
-                    chatModelResponse = await getChatModelResponse(phoneNumber, sttCorrectionModelResponse);
+                    // STT 평가 결과에 따라 처리 
+                    switch (sttEvaluationModelResponse) {
+                      // 통과일 경우 STT 전사 결과를 대화 진행 모델에 전달
+                      case '통과':
+                        chatModelResponse = await getChatModelResponse(phoneNumber, transcription);
+                        break;
+
+                      // 완전 손상일 경우 완전손상 메세지를 대화 진행 모델에 전달
+                      case '완전손상':
+                        chatModelResponse = await getChatModelResponse(phoneNumber, sttEvaluationModelResponse);
+                        break;
+
+                      // 불충분일 경우 STT 전사 결과를 STT 교정모델에 전달한 후, 교정 결과를 대화 진행 모델에 전달 
+                      case '불충분':
+                        const sttCorrectionModelResponse = await getSttCorrectionModelResponse(phoneNumber, chatModelResponse, transcription);
+                        console.log("상담자(STT 교정 결과): ", sttCorrectionModelResponse);
+                        if (wsReactConnection && wsReactConnection.readyState === WebSocket.OPEN) {
+                          wsReactConnection.send(JSON.stringify({ event: 'sttCorrection', sttCorrectionModelResponse }));
+                        }
+                        chatModelResponse = await getChatModelResponse(phoneNumber, sttCorrectionModelResponse);
+                        break;
+
+                      default:
+                        console.error("알 수 없는 평가 결과: ", sttEvaluationModelResponse);
+                    }
+
                     console.log("\n복지봇: ", chatModelResponse, "\n");
                     if (wsReactConnection && wsReactConnection.readyState === WebSocket.OPEN) {
                       wsReactConnection.send(JSON.stringify({ event: 'gptResponse', chatModelResponse }));

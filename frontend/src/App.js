@@ -95,6 +95,11 @@ function App() {
                 ...prevMessages,
                 { type: 'user', text: `원문: ${data.transcription}`, isTranscription: true },
               ]);
+            } else if (data.event === 'sttEvaluation') { 
+              setMessages((prevMessages) => [
+                ...prevMessages,
+                { type: 'user', text: `STT 평가 결과: ${data.sttEvaluationModelResponse}`, isTranscription: false },
+              ]);
             } else if (data.event === 'sttCorrection') {
               setMessages((prevMessages) => [
                 ...prevMessages,
