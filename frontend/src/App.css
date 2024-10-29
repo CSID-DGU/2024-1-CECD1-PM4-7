@@ -9,7 +9,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start; /* 컨텐츠 시작 부분에 정렬 */
-  min-height: 100vh; /* 화면을 꽉 채우도록 설정 */
+  min-height: 94vh; 
   position: relative; /* 상단에 고정되는 요소 처리 */
 }
 
@@ -58,6 +58,7 @@
   border: 1px solid gray;
   border-radius: 50px; /* 둥근 사각형 */
   margin-top: 5px ; /* 위쪽 간격 줄이기 */
+  margin-bottom: 5px;
   margin-left: auto;
   margin-right: auto; /* 중앙 정렬을 위한 auto 설정 */
   max-width: fit-content; /* 텍스트 길이에 맞춰 크기 조정 */
@@ -67,8 +68,31 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  max-height: 495px;
   max-width: 600px;
   margin: 0 auto;
+  margin-top: 10px;
+  padding-right: 10px;
+  overflow-y: auto;
+}
+
+/* 스크롤바 스타일 커스터마이징 */
+.chat-container::-webkit-scrollbar {
+  width: 10px; /* 스크롤바 너비 */
+}
+
+.chat-container::-webkit-scrollbar-track {
+  background: #f1f1f1; /* 스크롤바 트랙 배경 */
+  border-radius: 10px; /* 둥근 모서리 */
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+  background: #888; /* 스크롤바 색상 */
+  border-radius: 10px; /* 둥근 모서리 */
+}
+
+.chat-container::-webkit-scrollbar-thumb:hover {
+  background: #555; /* 마우스 오버 시 색상 변경 */
 }
 
 .user-message-container {
@@ -148,4 +172,32 @@
   background-color: #fffacd;
   color: #cd853f;
   font-weight: 580;
+}
+
+.dropdown-container {
+  position: absolute; /* 절대 위치 고정 */
+  top: 10px; /* 상단에서 10px 떨어짐 */
+  right: 10px; /* 우측에서 10px 떨어짐 */
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* 드롭다운 간 간격 */
+}
+
+.dropdown-container label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.dropdown-row {
+  display: flex; /* 라벨과 드롭다운을 한 줄에 배치 */
+  align-items: center;
+  justify-content: flex-end; /* 각 행의 레이블과 드롭다운이 한 줄에 배치되고 오른쪽 정렬됨 */
+  gap: 10px; /* 레이블과 드롭다운 사이의 간격 */
+}
+
+.dropdown-container select {
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  min-width: 180px; /* 최소 너비 설정 */
 }
