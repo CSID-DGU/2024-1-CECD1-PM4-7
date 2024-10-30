@@ -1,12 +1,13 @@
 # STT 평가모델 학습데이터 생성
 from common.info import getPrompt, getModelName, open_dialog
 from common.auth_ import getKey
-from playground.client import send_request_without_history
+from playground.client import send_request_without_history, send_request_with_history
 from openai import OpenAI
 import pandas as pd
 import numpy as np
 import json
 import re
+import random
 
 KEY = getKey('OPENAI')
 client = OpenAI(api_key=KEY)
@@ -117,12 +118,95 @@ def makeData_byChatModel():
     df2.to_excel(filePath.with_stem(filePath.stem + "_trainData"), index=False)
 
 
-# 2. 대화모델 기반 데이터로 모델 학습 데이터 생성
-def makeTrainData_byChatModel():
-    pass
+# 3. 대화모델 반복 호출로 긍정/부정 답변을 다수 생성
+def processQuestion(question: str) -> str:
+    last_sentence = question.split('.')[-1]
+    return last_sentence.strip()
+
+def expandData_byChatModel(iter: int):
+    PROMPT = getPrompt("playground_chat")
+    MODEL = getModelName("Chat")
+    END_SIGNAL = "종료하겠습니다"
+
+    numbers = [1, 2, 3, 3, 3, 3, 3, 3, 3, 4]
+    EMERGENCY = ["요금체납", "주거위기", "고용위기", "급여/서비스 탈락", "긴급상황 위기", "건강위기", "에너지위기"]
+
+    questions = []
+    # iter번만큼 질문 개수를 생성
+    for i in range(iter):
+        EMERGENCY_COUNT = random.sample(numbers, 1)[0]
+        EMERGENCY_LIST = random.sample(EMERGENCY, EMERGENCY_COUNT)
+        conversation_history = [
+            {
+                "role": "system",
+                "content": PROMPT
+            }
+        ]
+        first_ment = f"홍길동: " + ", ".join(EMERGENCY_LIST)
+        gpt_output = send_request_with_history(client, conversation_history, first_ment, MODEL)
+        print(gpt_output)
+        questions.append(processQuestion(gpt_output))
+
+        while True:
+            user_input = "아니"
+            gpt_output = send_request_with_history(client, conversation_history, user_input, MODEL)
+            print(gpt_output)
+            if END_SIGNAL in gpt_output:
+                break
+            questions.append(processQuestion(gpt_output))
+    """------------------------------------------------------------------------------------------"""
+    # 질문 개수만큼 랜덤 답변 생성
+    rand = [0, 1]
+    yes = ["예", "네", "맞아요", "어"]
+    no = ["아니", "아니오", "아니요"]
+    answers = []
+    extraPrompt = "너는 '질문'에 대한 답변을 생성해야한다. {imok} 답변이고, '{addExtra},'문구로 시작하라. 존댓말/반말 여부는 시작 문구와 맞추고, 총 답변의 길이는 간결하게 작성한다. 쉼표, 마침표는 제거한다."
+    for question in questions:
+        # 50%의 확률로 긍정
+        imok = random.choice(rand)
+
+        # 50%의 확률로 부가설명 추가
+        addExtra = random.choice(rand)
+
+        if addExtra: # 모델에 데이터 생성 요청
+            p = extraPrompt.replace('{imok}', "긍정" if imok else "부정")
+            p = p.replace('{addExtra}', random.choice(yes) if imok else random.choice(no))
+            user_input = "질문: " + question
+            conversation_history = [
+                {
+                    "role": "system",
+                    "content": p
+                },
+                {
+                    "role": "user",
+                    "content": user_input
+                }
+            ]
+            response = client.chat.completions.create(
+                model='gpt-4o',
+                messages=conversation_history,
+                temperature=1.0,
+                max_tokens=256,
+                top_p=1.0,
+                frequency_penalty=0,
+                presence_penalty=0
+            )
+            print(response.choices[0].message.content)
+            answers.append(response.choices[0].message.content.replace(',', ''))
+        else: # 바로 추가
+            answers.append(random.choice(yes) if imok else random.choice(no))
+
+    df = pd.DataFrame({
+        'Questions': questions,
+        'Answers': answers
+    })
+
+    # 엑셀 파일로 저장
+    df.to_excel("validation_yesno.xlsx", index=False)
 
 
 if __name__ == '__main__':
     # makeData_byCorrectionModel()
     # makeTrainData_byCorrectionModel()
-    makeData_byChatModel()
+    # makeData_byChatModel()
+    expandData_byChatModel(200)
