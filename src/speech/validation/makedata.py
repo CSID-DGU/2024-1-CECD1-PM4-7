@@ -205,8 +205,65 @@ def expandData_byChatModel(iter: int):
     df.to_excel("validation_yesno.xlsx", index=False)
 
 
+# 4. 모든 데이터를 일정 비율로 섞어서 새로운 데이터셋 생성
+def mixToNewData():
+    pass1 = open_dialog(isfolder=False, filetypes=[("JSON Lines Files", "*.jsonl")]) # 대화모델기반
+    sample_df1 = pd.read_json(pass1, lines=True, encoding='utf-8-sig')
+    pass2 = open_dialog(isfolder=False, filetypes=[("JSON Lines Files", "*.jsonl")]) # 평가모델_긍부정
+    sample_df2 = pd.read_json(pass2, lines=True, encoding='utf-8')
+    notpass = open_dialog(isfolder=False, filetypes=[("JSON Lines Files", "*.jsonl")]) # STT데이터
+    df = pd.read_json(notpass, lines=True, encoding='utf-8')
+
+    json_list = []
+    """
+    데이터 혼합 비율
+    1. STT파일의 경우 불충분/완전손상만을 사용, "모범출력:" 항목을 제거
+        User항목을 프롬프트와 결합
+        최종 데이터 수를 기록
+    2. 대화모델 분리파일, 긍부정 파일은 1번의 최종 데이터 수를 기록하여 절반씩 차지, 랜덤 샘플링 
+    """
+    count = 0
+    for index, row in df.iterrows():
+        system = row['messages'][0]['content']
+        user = row['messages'][1]['content']
+        assistant = row['messages'][2]['content']
+        if "모범 출력: " in assistant:
+            assistant = assistant.replace("모범 출력: ", "")
+
+        if assistant == "통과":
+            continue
+        else:
+            count += 1
+            system = f"{system}\n 문장: '{user}'"
+            message = {
+                "messages": [
+                    {"role": "system", "content": system},
+                    {"role": "assistant", "content": assistant}
+                ]
+            }
+            json_list.append(json.dumps(message, ensure_ascii=False))
+
+    # 통과 데이터 샘플링
+    sample_df1 = sample_df1.sample(n=int(count/2), random_state=1)
+    sample_df2 = sample_df2.sample(n=int(count/2), random_state=1)
+
+    for _, row in sample_df1.iterrows():
+        json_list.append(json.dumps(row.to_dict(), ensure_ascii=False))
+
+    for _, row in sample_df2.iterrows():
+        json_list.append(json.dumps(row.to_dict(), ensure_ascii=False))
+
+    # 저장
+    output_path = 'combined_data.jsonl'
+    random.shuffle(json_list)
+    with open(output_path, 'w', encoding='utf-8') as f:
+        for item in json_list:
+            f.write(item + '\n')
+
+
 if __name__ == '__main__':
     # makeData_byCorrectionModel()
     # makeTrainData_byCorrectionModel()
     # makeData_byChatModel()
-    expandData_byChatModel(200)
+    # expandData_byChatModel(200)
+    mixToNewData()
