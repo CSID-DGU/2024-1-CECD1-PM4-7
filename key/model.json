@@ -1,6 +1,6 @@
 {
-  "stt_validation" : "ft:gpt-4o-mini-2024-07-18:cecd:stt-validation-241030:ANviIFFh",
+  "stt_validation" : "ft:gpt-4o-mini-2024-07-18:cecd:stt-validation-241031:AONv87BL",
   "stt_correction": "ft:gpt-4o-mini-2024-07-18:cecd:stt-correction-241009:AGMO230Q",
-  "Chat": "ft:gpt-4o-mini-2024-07-18:cecd:241011-chat-tuning-test:AGqPDGa7",
+  "Chat": "ft:gpt-4o-2024-08-06:cecd:241031-chat-4o:AOQOE5JH",
   "Summary": "ft:gpt-4o-mini-2024-07-18:cecd:summary-241010:AGjrxL5P"
 }
