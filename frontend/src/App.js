@@ -99,12 +99,18 @@ function App() {
                 ]);
                 break;
           
-              case 'sttEvaluation':
-                setMessages((prevMessages) => [
-                  ...prevMessages,
-                  { type: 'user', text: `STT 평가 결과: ${data.sttEvaluationModelResponse}`, isTranscription: false },
-                ]);
-                break;
+                case 'sttEvaluation': {
+                  const colorClass =
+                    data.sttEvaluationModelResponse === '통과' ? 'pass-message' :
+                    data.sttEvaluationModelResponse === '불충분' ? 'insufficient-message' :
+                    data.sttEvaluationModelResponse === '완전손상' ? 'full-damage-message' : '';
+            
+                  setMessages((prevMessages) => [
+                    ...prevMessages,
+                    { type: 'user', text: `STT 평가 결과: ${data.sttEvaluationModelResponse}`, colorClass },
+                  ]);
+                  break;
+                }
           
               case 'sttCorrection':
                 setMessages((prevMessages) => [
