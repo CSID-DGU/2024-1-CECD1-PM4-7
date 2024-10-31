@@ -138,6 +138,7 @@
   white-space: normal; /* 자동 줄바꿈 허용 */
   overflow-wrap: normal; /* 단어 단위 줄바꿈 방지 */
   word-break: keep-all; /* 단어 전체가 말풍선을 넘어갈 때 줄바꿈 */
+  min-width: 140px; /* 최소 너비 설정 */
 }
 
 .insufficient-message {
@@ -145,6 +146,7 @@
   white-space: normal; /* 자동 줄바꿈 허용 */
   overflow-wrap: normal; /* 단어 단위 줄바꿈 방지 */
   word-break: keep-all; /* 단어 전체가 말풍선을 넘어갈 때 줄바꿈 */
+  min-width: 150px; /* 최소 너비 설정 */
 }
 
 .full-damage-message {
@@ -152,8 +154,8 @@
   white-space: normal; /* 자동 줄바꿈 허용 */
   overflow-wrap: normal; /* 단어 단위 줄바꿈 방지 */
   word-break: keep-all; /* 단어 전체가 말풍선을 넘어갈 때 줄바꿈 */
+  min-width: 160px; /* 최소 너비 설정 */
 }
-
 
 .gpt-message-container {
   display: flex;
