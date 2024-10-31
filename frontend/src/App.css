@@ -130,6 +130,19 @@
   text-align: left;
 }
 
+.pass-message {
+  background-color: #83e088;
+}
+
+.insufficient-message {
+  background-color: #FF9800;
+}
+
+.full-damage-message {
+  background-color: #F44336;
+}
+
+
 .gpt-message-container {
   display: flex;
   flex-direction: column;
