@@ -122,13 +122,26 @@
 
 .user-message {
   align-self: flex-end;
-  background-color: #FF9800;
+  background-color: #0084ff;
   color: white;
   padding: 10px;
   border-radius: 15px;
   max-width: 80%; /* 최대 너비를 80%로 설정 */
   text-align: left;
 }
+
+.pass-message {
+  background-color: #83e088;
+}
+
+.insufficient-message {
+  background-color: #FF9800;
+}
+
+.full-damage-message {
+  background-color: #F44336;
+}
+
 
 .gpt-message-container {
   display: flex;
