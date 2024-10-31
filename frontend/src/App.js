@@ -87,36 +87,52 @@ function App() {
           socket.onopen = () => {
             console.log('WebSocket 연결 성공');
           };
-      
+
           socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            if (data.event === 'transcription') {
-              setMessages((prevMessages) => [
-                ...prevMessages,
-                { type: 'user', text: `원문: ${data.transcription}`, isTranscription: true },
-              ]);
-            } else if (data.event === 'sttEvaluation') { 
-              setMessages((prevMessages) => [
-                ...prevMessages,
-                { type: 'user', text: `STT 평가 결과: ${data.sttEvaluationModelResponse}`, isTranscription: false },
-              ]);
-            } else if (data.event === 'sttCorrection') {
-              setMessages((prevMessages) => [
-                ...prevMessages,
-                { type: 'user', text: `수정된 텍스트: ${data.sttCorrectionModelResponse}`, isTranscription: false},
-              ]);
-            } else if (data.event === 'gptResponse') {
-              setMessages((prevMessages) => [
-                ...prevMessages,
-                { type: 'gpt', text: data.chatModelResponse, isChatSummary: false },
-              ]);
-            } else if (data.event === 'chatSummary') {
-              setMessages((prevMessages) => [
-                ...prevMessages,
-                {type:'gpt', text: `대화 내용 요약: ${data.chatSummaryModelResponse}`, isChatSummary: true },
-              ]);
-            } else if(data.event === 'toast') {
-              toast.success(data.message);
+          
+            switch (data.event) {
+              case 'transcription':
+                setMessages((prevMessages) => [
+                  ...prevMessages,
+                  { type: 'user', text: `원문: ${data.transcription}`, isTranscription: true },
+                ]);
+                break;
+          
+              case 'sttEvaluation':
+                setMessages((prevMessages) => [
+                  ...prevMessages,
+                  { type: 'user', text: `STT 평가 결과: ${data.sttEvaluationModelResponse}`, isTranscription: false },
+                ]);
+                break;
+          
+              case 'sttCorrection':
+                setMessages((prevMessages) => [
+                  ...prevMessages,
+                  { type: 'user', text: `STT 교정 결과: ${data.sttCorrectionModelResponse}`, isTranscription: false },
+                ]);
+                break;
+          
+              case 'gptResponse':
+                setMessages((prevMessages) => [
+                  ...prevMessages,
+                  { type: 'gpt', text: data.chatModelResponse, isChatSummary: false },
+                ]);
+                break;
+          
+              case 'chatSummary':
+                setMessages((prevMessages) => [
+                  ...prevMessages,
+                  { type: 'gpt', text: `대화 내용 요약: ${data.chatSummaryModelResponse}`, isChatSummary: true },
+                ]);
+                break;
+          
+              case 'toast':
+                toast.success(data.message);
+                break;
+          
+              default:
+                console.warn('알 수 없는 이벤트 타입:', data.event);
             }
           };
       
@@ -176,13 +192,14 @@ function App() {
                   <img src={userIcon} alt="상담자" className="user-icon" />
                 </div>
               )}
-            <div
-              className={`
-                ${message.type === 'user' ? 'user-message' : 'gpt-message'} 
-                ${message.isTranscription ? 'transcription-message' : ''} 
-                ${message.isChatSummary ? 'chat-summary-message' : ''} 
-              `}
-            >
+              <div
+                className={`
+                  ${message.type === 'user' ? 'user-message' : 'gpt-message'}
+                  ${message.isTranscription ? 'transcription-message' : ''}
+                  ${message.isChatSummary ? 'chat-summary-message' : ''}
+                  ${message.colorClass || ''}
+  `             }
+              >
                 {message.text}
               </div>
             </div>
