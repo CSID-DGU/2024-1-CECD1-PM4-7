@@ -18,6 +18,8 @@ const twilio = require("twilio");
 
 const app = express();
 
+// 테스트
+
 // JSON과 URL 자동 파싱
 app.use(express.json()); 
 app.use(express.urlencoded({extended: true}));
