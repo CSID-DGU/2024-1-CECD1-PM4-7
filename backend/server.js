@@ -1,4 +1,5 @@
 // 서버 실행 및 라우팅 작업 수행
+// 우히히! I'm Silver Prize
 require("dotenv").config(); // 환경 변수 로드
 const {getPhoneNumbers, getCrisisTypes, updateCrisisTypes, callUser} = require("./dynamoDB.js");
 const {createRecognizeStream} = require('./stt');
