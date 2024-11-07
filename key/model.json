@@ -3,6 +3,8 @@
   "stt_validation" : "ft:gpt-4o-2024-08-06:cecd:stt-validation-v2-241106:AQWLFA4f",
   "stt_correction" : "ft:gpt-4o-2024-08-06:cecd:stt-correction-v2-241106:AQWXsh3n",
   "stt_correction_old": "ft:gpt-4o-mini-2024-07-18:cecd:stt-correction-241009:AGMO230Q",
-  "Chat": "ft:gpt-4o-2024-08-06:cecd:241031-chat-4o:AOQOE5JH",
+  "Chat": "ft:gpt-4o-mini-2024-07-18:cecd:241107-4omini:AQpdlz3j",
+  "Annotation": "Chat is 4o-mini, and Chat_4o is 4o",
+  "Chat_4o": "ft:gpt-4o-2024-08-06:cecd:241031-chat-4o-another-hyperparamter-comb:AOQpG0dU",
   "Summary": "ft:gpt-4o-mini-2024-07-18:cecd:summary-241010:AGjrxL5P"
 }
