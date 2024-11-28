@@ -18,14 +18,17 @@ const twilio = require("twilio");
 
 const app = express();
 
-// 테스트
-
 // JSON과 URL 자동 파싱
 app.use(express.json()); 
 app.use(express.urlencoded({extended: true}));
 
 // React 정적 파일 제공
 app.use(express.static(path.join(__dirname, '../frontend/build')));
+
+// Twilio Client 초기화
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const twilioClient = twilio(accountSid, authToken);
 
 // SSL 인증서와 개인 키 읽기
 const options = {
@@ -186,6 +189,7 @@ httpsServer.on('upgrade', (request, socket, head) => {
       let isAudioProcessing = true;
       let chatModelResponse = null;
       let phoneNumber = null;
+      let callSid = null;
 
       wsTwilio.on('message', message => {
         const msg = JSON.parse(message);
@@ -196,6 +200,7 @@ httpsServer.on('upgrade', (request, socket, head) => {
           case "start":
             phoneNumber = msg.start.customParameters.phoneNumber;
             const gptRequest = msg.start.customParameters.gptRequest;
+            callSid = msg.start.callSid;
             console.log("\n전화번호", phoneNumber);
             
             // 상담 시작 메시지 출력
@@ -297,8 +302,14 @@ httpsServer.on('upgrade', (request, socket, head) => {
             }
             break;
 
-          case "mark":          
+          case "mark":
             playBeepSound(wsTwilio, msg.streamSid);  //삐 소리 출력
+            // "대화를 종료"라는 텍스트가 포함되어 있는지 확인
+            (async () => {
+              if (chatModelResponse.includes("대화를 종료")) {
+                await twilioClient.calls(callSid).update({status: 'completed'});
+              }
+            }) ();
             isAudioProcessing = false;
             recognizeStream = null;
             break;
